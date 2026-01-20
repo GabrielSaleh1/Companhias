@@ -1332,19 +1332,56 @@
         });
 
         const form = document.getElementById("form-novo-registro");
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const formData = new FormData(form);
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-          const officer_name = String(formData.get("officer_name") || "").trim();
-          const company = String(formData.get("company") || "");
-          const origin_role = String(formData.get("origin_role") || "");
-          const description = String(formData.get("description") || "").trim();
-          const last_updated_by = String(formData.get("last_updated_by") || "").trim();
+  if (!currentAccess) {
+    alert("Perfil não carregado. Recarregue a página.");
+    return;
+  }
 
-          if (!officer_name || !company || !origin_role || !description) {
-            alert("Preencha todos os campos obrigatórios.");
-            return;
+  const formData = new FormData(form);
+
+  const officer_name = String(formData.get("officer_name") || "").trim();
+  const company = String(formData.get("company") || "");
+  const description = String(formData.get("description") || "").trim();
+
+  // agora estes NÃO vêm do formulário — vêm do usuário logado
+  const origin_role = currentAccess.funcao;   // PA / SUB / CMD / COORDOP
+  const last_updated_by = currentAccess.nome; // Nome do usuário
+
+  if (!officer_name || !company || !description) {
+    alert("Preencha todos os campos obrigatórios.");
+    return;
+  }
+
+  // trava companhia se não for COORDOP
+  if (currentAccess.funcao !== "COORDOP") {
+    const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
+    if (company !== must) {
+      alert("Companhia inválida para seu perfil.");
+      return;
+    }
+  }
+
+  const payload = {
+    officer_name,
+    company,
+    description,
+    origin_role,
+    last_updated_by,
+    current_stage: "PA",
+    status: "Pendente"
+  };
+
+  const ok = await createReport(payload);
+  if (!ok) return;
+
+  form.reset();
+  applyCompanyToForm();
+  await loadReports();
+});
+
           }
 
           // trava companhia se não for coordop
