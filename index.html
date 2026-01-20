@@ -831,7 +831,7 @@
       const { data, error } = await sb.auth.getUser();
 
       if (error || !data?.user) {
-        window.location.href = "login.html";
+        window.location.href = "./login.html";
         return false;
       }
 
