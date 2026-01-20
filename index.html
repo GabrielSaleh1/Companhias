@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -1343,9 +1343,16 @@
           const formData = new FormData(form);
 
           const officer_name = String(formData.get("officer_name") || "").trim();
-          const company = String(formData.get("company") || "");
+          const companySelectEl = document.getElementById("company-select");
+          let company = String(formData.get("company") || "");
+          // IMPORTANTE: se o select estiver "disabled", ele NÃO entra no FormData.
+          // Então pegamos direto do elemento (ou do perfil logado como fallback).
+          if (!company) company = String(companySelectEl?.value || "");
+          if (!company && currentAccess?.companhia) {
+            company = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
+          }
           const type = String(formData.get("type") || "").trim();
-          const priority = String(formData.get("priority") || "").trim();
+const priority = String(formData.get("priority") || "").trim();
           const source = String(formData.get("source") || "").trim();
           const description = String(formData.get("description") || "").trim();
           const internal_notes = String(formData.get("internal_notes") || "").trim();
