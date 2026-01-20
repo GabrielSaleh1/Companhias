@@ -1105,23 +1105,18 @@
       filtered.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-  <td>${formatDate(r.created_at)}</td>
-  <td>${r.officer_name}</td>
-  <td>${companyLabel(normalizeCompany(r.company))}</td>
-
-  <td>${r.type || '-'}</td>
-  <td>${r.priority || '-'}</td>
-
-  <td>
-    <span class="status-dot ${statusClass(r.status)}"></span>
-    ${r.status}
-  </td>
-
-  <td>${r.current_stage}</td>
-  <td>${r.description}</td>
-
-  <td>${actionButtonsForMainTable(r)}</td>
-`;
+          <td>${formatDate(r.created_at)}</td>
+          <td>${r.officer_name}</td>
+          <td>${companyLabel(normalizeCompany(r.company))}</td>
+          <td>${r.type || '-'}</td>
+          <td>${r.priority || '-'}</td>
+          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+          <td>${r.current_stage}</td>
+          <td>${r.description}</td>
+          <td>${actionButtonsForMainTable(r)}</td>
+        `;
+        tr.addEventListener("click", () => openModal(r));
+        tbodyReg.appendChild(tr);
       });
 
       // Caveiras
@@ -1295,6 +1290,31 @@
       await loadReports();
     }
 
+    
+    function openModal(r){
+      document.getElementById("modal-title").textContent = `Demanda — ${r.officer_name}`;
+      document.getElementById("modal-sub").textContent =
+        `${companyLabel(normalizeCompany(r.company))} • ${r.type} • ${r.priority}`;
+      document.getElementById("modal-summary").innerHTML = `
+        <strong>Status:</strong> ${r.status}<br/>
+        <strong>Etapa:</strong> ${r.current_stage}<br/>
+        <strong>Descrição:</strong><br/>${r.description}
+      `;
+      document.getElementById("modal-timeline").innerHTML = `
+        <div>📌 Criado em ${formatDate(r.created_at)}</div>
+        ${r.escalated_to ? `<div>➡️ Escalado para ${r.escalated_to}</div>` : ``}
+        ${r.last_updated_by ? `<div>✍️ Última ação: ${r.last_updated_by}</div>` : ``}
+      `;
+      document.getElementById("modal-backdrop").style.display = "flex";
+    }
+
+    function closeModal(){
+      document.getElementById("modal-backdrop").style.display = "none";
+    }
+
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+
     // Expor globalmente
     window.marcarEmAnalise = marcarEmAnalise;
     window.escalarParaSub = escalarParaSub;
@@ -1421,3 +1441,4 @@ document.getElementById("filter-status").addEventListener("change", renderTables
   </script>
 </body>
 </html>
+
