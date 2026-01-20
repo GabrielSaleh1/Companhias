@@ -3,21 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel de Companhias — 1º BPCHQ ROTA</title>
+  <title>Painel de Gestão — Companhias (ROTA)</title>
 
-  <!-- Tailwind CDN (padrão visual alinhado ao Ponto Online) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter','system-ui','Segoe UI','Roboto','Arial'] }
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','system-ui','Segoe UI','Roboto','Arial'] } } } }
   </script>
 
-  <!-- Supabase JS (v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -26,21 +18,18 @@
       --panel:rgba(15,23,42,.86);
       --panel-strong:rgba(15,23,42,.92);
       --stroke:rgba(148,163,184,.16);
-      --stroke-strong:rgba(148,163,184,.22);
-
+      --stroke-strong:rgba(148,163,184,.24);
       --accent:#facc15;
-      --accent-2:#f59e0b;
       --accent-soft:rgba(250,204,21,.12);
-
       --text:#e5e7eb;
       --text-muted:#9ca3af;
-
       --danger:#f87171;
       --success:#4ade80;
+      --info:#60a5fa;
+      --warn:#fbbf24;
     }
 
     *{ box-sizing:border-box; }
-
     body{
       margin:0;
       font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -50,13 +39,9 @@
         radial-gradient(circle at 80% 10%, rgba(96,165,250,.10), transparent 52%),
         radial-gradient(circle at top, #0b1120 0%, #020617 56%, #000 100%);
     }
-
-    /* grade sutil (igual clima do Ponto Online) */
     body::before{
       content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
+      position:fixed; inset:0; pointer-events:none;
       background:
         linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
@@ -65,96 +50,51 @@
       opacity:.9;
     }
 
-    .app{
-      display:flex;
-      min-height:100vh;
-      position:relative;
-    }
+    .app{ display:flex; min-height:100vh; position:relative; }
 
-    /* SIDEBAR */
     .sidebar{
-      width:260px;
+      width:280px;
       padding:20px 16px;
       display:flex;
       flex-direction:column;
       gap:18px;
-
       background:var(--panel);
       backdrop-filter: blur(14px);
       border-right:1px solid var(--stroke);
       box-shadow: 0 16px 45px rgba(0,0,0,.35);
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
+    .brand{ display:flex; align-items:center; gap:10px; }
     .brand-icon{
-      width:36px;
-      height:36px;
-      border-radius:999px;
+      width:36px; height:36px; border-radius:999px;
       border:2px solid var(--accent);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      font-size:15px;
-      color:var(--accent);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900; font-size:15px; color:var(--accent);
       background: radial-gradient(circle, rgba(250,204,21,.22), transparent 70%);
       box-shadow: 0 0 0 4px rgba(250,204,21,.06);
     }
-
-    .brand-text-title{
-      font-size:15px;
-      font-weight:800;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-    }
-
-    .brand-text-sub{
-      font-size:11px;
-      color:var(--text-muted);
-    }
+    .brand-text-title{ font-size:14px; font-weight:900; letter-spacing:.10em; text-transform:uppercase; }
+    .brand-text-sub{ font-size:11px; color:var(--text-muted); }
 
     .sidebar-section-title{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      color:var(--text-muted);
-      margin-top:6px;
-      margin-bottom:4px;
+      font-size:11px; text-transform:uppercase; letter-spacing:.14em;
+      color:var(--text-muted); margin-top:6px; margin-bottom:4px;
     }
 
-    .nav-group{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
+    .nav-group{ display:flex; flex-direction:column; gap:6px; }
     .nav-btn{
       border:1px solid transparent;
       background:transparent;
       color:var(--text-muted);
       padding:9px 10px;
       border-radius:12px;
-      text-align:left;
       cursor:pointer;
+      text-align:left;
       font-size:13px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+      display:flex; align-items:center; justify-content:space-between;
       transition: background .15s, color .15s, transform .05s, border-color .15s;
     }
-
-    .nav-btn span.label{ flex:1; }
-
-    .nav-btn:hover{
-      background: rgba(15,23,42,.70);
-      border-color: rgba(148,163,184,.12);
-    }
-
+    .nav-btn:hover{ background: rgba(15,23,42,.70); border-color: rgba(148,163,184,.12); }
     .nav-btn.active{
       background: var(--accent-soft);
       color: var(--accent);
@@ -162,54 +102,25 @@
       transform: translateX(1px);
       box-shadow: 0 0 0 4px rgba(250,204,21,.06);
     }
-
     .sidebar-footer{
-      margin-top:auto;
-      font-size:11px;
-      color:var(--text-muted);
-      border-top:1px solid var(--stroke);
-      padding-top:12px;
+      margin-top:auto; font-size:11px; color:var(--text-muted);
+      border-top:1px solid var(--stroke); padding-top:12px;
     }
 
-    /* MAIN */
-    .main{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-    }
-
+    .main{ flex:1; display:flex; flex-direction:column; min-width:0; }
     .topbar{
       padding:16px 20px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-
+      display:flex; justify-content:space-between; align-items:center;
       background: var(--panel-strong);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--stroke);
     }
+    .topbar-title{ font-size:18px; font-weight:900; letter-spacing:.02em; }
+    .topbar-sub{ font-size:12px; color:var(--text-muted); }
 
-    .topbar-title{
-      font-size:18px;
-      font-weight:800;
-      letter-spacing:.02em;
-    }
-
-    .topbar-sub{
-      font-size:12px;
-      color:var(--text-muted);
-    }
-
-    .topbar-right{
-      font-size:12px;
-      color:var(--text-muted);
-      text-align:right;
-    }
-
+    .topbar-right{ font-size:12px; color:var(--text-muted); text-align:right; }
     .tag-pill{
-      display:inline-flex;
-      align-items:center;
+      display:inline-flex; align-items:center;
       border-radius:999px;
       border:1px solid var(--stroke);
       padding:2px 9px;
@@ -217,33 +128,19 @@
       font-size:11px;
       background: rgba(2,6,23,.35);
     }
+    .tag-pill strong{ color:var(--accent); margin-right:4px; }
 
-    .tag-pill strong{
-      color:var(--accent);
-      margin-right:4px;
-    }
-
-    .content{
-      padding:20px;
-      flex:1;
-      overflow-y:auto;
-    }
+    .content{ padding:20px; flex:1; overflow-y:auto; }
 
     .section-title{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.18em;
-      color:var(--text-muted);
-      margin-bottom:12px;
+      font-size:12px; text-transform:uppercase; letter-spacing:.18em;
+      color:var(--text-muted); margin-bottom:12px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap:16px;
-    }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
 
-    /* CARD (padrão glass) */
     .card{
       background: var(--panel);
       border-radius:18px;
@@ -251,55 +148,34 @@
       padding:16px 16px 14px;
       box-shadow: 0 14px 40px rgba(0,0,0,.28);
     }
-
-    .card-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:8px;
-      gap:10px;
-    }
-
-    .card-title{
-      font-size:14px;
-      font-weight:800;
-    }
-
-    .card-subtitle{
-      font-size:12px;
-      color:var(--text-muted);
-    }
-
-    .stat-number{
-      font-size:24px;
-      font-weight:900;
-      letter-spacing:.02em;
-    }
-
-    .stat-label{
-      font-size:11px;
-      color:var(--text-muted);
-    }
+    .card-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px; }
+    .card-title{ font-size:14px; font-weight:900; }
+    .card-subtitle{ font-size:12px; color:var(--text-muted); }
+    .stat-number{ font-size:24px; font-weight:900; letter-spacing:.02em; }
+    .stat-label{ font-size:11px; color:var(--text-muted); }
 
     .badge{
-      display:inline-flex;
-      align-items:center;
+      display:inline-flex; align-items:center;
       border-radius:999px;
       border:1px solid rgba(250,204,21,.22);
       padding:2px 8px;
       font-size:10px;
       color:var(--accent);
       background: rgba(250,204,21,.08);
+      white-space:nowrap;
     }
+    .badge.gray{ border-color: rgba(148,163,184,.22); color: var(--text-muted); background: rgba(148,163,184,.06); }
+    .badge.red{ border-color: rgba(248,113,113,.30); color: var(--danger); background: rgba(248,113,113,.08); }
+    .badge.blue{ border-color: rgba(96,165,250,.30); color: var(--info); background: rgba(96,165,250,.08); }
+    .badge.green{ border-color: rgba(74,222,128,.30); color: var(--success); background: rgba(74,222,128,.08); }
+    .badge.yellow{ border-color: rgba(251,191,36,.30); color: var(--warn); background: rgba(251,191,36,.08); }
 
-    /* BOTÕES */
     .btn{
       border:none;
       border-radius:999px;
       padding:7px 12px;
       font-size:12px;
       cursor:pointer;
-
       background: rgba(2,6,23,.35);
       color:var(--text);
       border:1px solid var(--stroke);
@@ -307,49 +183,26 @@
       align-items:center;
       gap:6px;
       transition: transform .05s, background .15s, border-color .15s, color .15s, box-shadow .15s;
+      user-select:none;
     }
-
-    .btn:hover{
-      background: rgba(15,23,42,.70);
-      border-color: var(--stroke-strong);
-    }
-
+    .btn:hover{ background: rgba(15,23,42,.70); border-color: var(--stroke-strong); }
     .btn:active{ transform: translateY(1px); }
 
     .btn.primary{
       background: var(--accent-soft);
       border-color: rgba(250,204,21,.55);
       color: var(--accent);
-      font-weight:800;
+      font-weight:900;
       box-shadow: 0 0 0 4px rgba(250,204,21,.06);
     }
-
-    .btn.primary:hover{
-      background: rgba(250,204,21,.16);
-      border-color: rgba(250,204,21,.75);
-    }
-
-    .btn.danger{
-      border-color: rgba(248,113,113,.55);
-      color: var(--danger);
-    }
-
-    .btn.danger:hover{
-      border-color: rgba(248,113,113,.85);
-      box-shadow: 0 0 0 4px rgba(248,113,113,.06);
-    }
-
-    .btn.sm{
-      padding:4px 9px;
-      font-size:11px;
-    }
-
+    .btn.danger{ border-color: rgba(248,113,113,.55); color: var(--danger); }
+    .btn.ghost{ background: transparent; }
+    .btn.sm{ padding:4px 9px; font-size:11px; }
     .btn + .btn{ margin-left:6px; }
 
     .flex-row{ display:flex; gap:16px; flex-wrap:wrap; }
     .flex-1{ flex:1 1 0; min-width:0; }
 
-    /* inputs */
     .field-group{ margin-bottom:10px; }
     .field-label{ font-size:11px; color:var(--text-muted); margin-bottom:4px; }
 
@@ -364,16 +217,13 @@
       outline:none;
       transition: border-color .15s, box-shadow .15s, background .15s;
     }
-
     .input:focus, .select:focus, .textarea:focus{
       border-color: rgba(250,204,21,.55);
       box-shadow: 0 0 0 4px rgba(250,204,21,.08);
       background: rgba(2,6,23,.70);
     }
+    .textarea{ resize:vertical; min-height:80px; }
 
-    .textarea{ resize:vertical; min-height:70px; }
-
-    /* tabelas */
     .table-wrapper{
       margin-top:10px;
       border-radius:16px;
@@ -382,44 +232,27 @@
       background: var(--panel);
       box-shadow: 0 14px 40px rgba(0,0,0,.22);
     }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:12px;
-    }
-
-    thead{
-      background: rgba(250,204,21,.06);
-    }
-
+    table{ width:100%; border-collapse:collapse; font-size:12px; }
+    thead{ background: rgba(250,204,21,.06); }
     th, td{
       padding:9px 10px;
       border-bottom: 1px dashed rgba(148,163,184,.20);
       text-align:left;
       vertical-align:top;
     }
-
     th{
       font-size:11px;
       text-transform:uppercase;
       letter-spacing:.12em;
       color:var(--text-muted);
+      white-space:nowrap;
     }
-
-    tbody tr:hover{
-      background: rgba(15,23,42,.55);
-    }
+    tbody tr:hover{ background: rgba(15,23,42,.55); cursor:pointer; }
 
     .status-dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      display:inline-block;
-      margin-right:6px;
-      transform: translateY(-1px);
+      width:8px; height:8px; border-radius:999px;
+      display:inline-block; margin-right:6px; transform: translateY(-1px);
     }
-
     .status-dot.pendente{ background:#fbbf24; }
     .status-dot.analise{ background:#60a5fa; }
     .status-dot.resolvido{ background:#4ade80; }
@@ -427,6 +260,57 @@
 
     .view{ display:none; }
     .view.active{ display:block; }
+
+    /* Toast */
+    #toast{
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      padding: 10px 14px;
+      background: rgba(15,23,42,.96);
+      border: 1px solid rgba(148,163,184,.4);
+      border-radius: 999px;
+      font-size: 12px;
+      display: none;
+      z-index: 9999;
+      box-shadow: 0 14px 40px rgba(0,0,0,.25);
+    }
+
+    /* Modal */
+    #modal-backdrop{
+      position: fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index: 9998;
+    }
+    #modal{
+      width: min(980px, 100%);
+      max-height: min(88vh, 900px);
+      overflow:auto;
+      background: var(--panel-strong);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    .modal-head{
+      position: sticky;
+      top: 0;
+      background: rgba(15,23,42,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--stroke);
+      padding: 14px 16px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      z-index: 1;
+    }
+    .modal-body{ padding: 14px 16px 16px; }
+    .modal-title{ font-weight: 900; font-size: 14px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
     @media (max-width: 860px){
       .app{ flex-direction:column; }
@@ -439,217 +323,364 @@
         gap:10px;
       }
       .sidebar-footer{ display:none; }
+      .modal-head{ flex-direction:column; }
     }
   </style>
 </head>
 
 <body>
+  <div id="toast"></div>
+
+  <div id="modal-backdrop">
+    <div id="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="modal-title">Detalhes</div>
+          <div id="modal-sub" style="font-size:12px;color:var(--text-muted);margin-top:4px;"></div>
+        </div>
+        <div style="text-align:right;">
+          <button class="btn sm ghost" onclick="closeModal()">Fechar</button>
+          <div id="modal-actions" style="margin-top:8px;"></div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Resumo</div>
+                <div class="card-subtitle">Informações principais</div>
+              </div>
+            </div>
+            <div id="modal-summary" style="font-size:13px;line-height:1.45;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Linha do tempo</div>
+                <div class="card-subtitle">Histórico de ações</div>
+              </div>
+            </div>
+            <div id="modal-timeline" style="font-size:12px;line-height:1.45;"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Observações internas</div>
+              <div class="card-subtitle">Notas do PA/Sub/Cmd/Maj (não é pra “tropa”)</div>
+            </div>
+          </div>
+          <textarea id="modal-notes" class="textarea" placeholder="Escreva observações internas (ex.: reincidência, conversa realizada, decisão sugerida...)"></textarea>
+          <div style="margin-top:10px;">
+            <button class="btn sm" onclick="saveInternalNotes()">Salvar observações</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <div class="app">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon">RT</div>
         <div>
-          <div class="brand-text-title">1º BPCHQ ROTA</div>
-          <div class="brand-text-sub">Sistema interno de companhias</div>
+          <div class="brand-text-title">ROTA • Gestão Interna</div>
+          <div class="brand-text-sub">PA → Sub → Cmd → Maj Coordop</div>
         </div>
       </div>
 
       <div>
         <div class="sidebar-section-title">Painel</div>
         <div class="nav-group">
-          <button class="nav-btn active" data-view="view-dashboard">
-            <span class="label">Visão Geral</span>
-          </button>
-          <button class="nav-btn" data-view="view-registros">
-            <span class="label">Registros</span>
-          </button>
+          <button class="nav-btn active" data-view="view-dashboard"><span class="label">Visão Geral</span></button>
+          <button class="nav-btn" data-view="view-registros"><span class="label">Demandas</span></button>
+          <button class="nav-btn" data-view="view-relatorios" id="nav-relatorios"><span class="label">Relatórios</span></button>
         </div>
       </div>
 
       <div>
         <div class="sidebar-section-title">Companhias</div>
         <div class="nav-group">
-          <button class="nav-btn" data-view="view-cia-alfa" id="nav-cia-alfa">
-            <span class="label">Companhia Caveiras</span>
-          </button>
-          <button class="nav-btn" data-view="view-cia-bravo" id="nav-cia-bravo">
-            <span class="label">Companhia Boinas Pretas</span>
-          </button>
+          <button class="nav-btn" data-view="view-cia-alfa" id="nav-cia-alfa"><span class="label">Companhia Caveiras</span></button>
+          <button class="nav-btn" data-view="view-cia-bravo" id="nav-cia-bravo"><span class="label">Companhia Boinas Pretas</span></button>
         </div>
       </div>
 
       <div>
-        <div class="sidebar-section-title">Funções</div>
+        <div class="sidebar-section-title">Etapas</div>
         <div class="nav-group">
-          <button class="nav-btn" data-view="view-pa">
-            <span class="label">Praça Auxiliar</span>
-          </button>
-          <button class="nav-btn" data-view="view-sub">
-            <span class="label">Subcomando</span>
-          </button>
-          <button class="nav-btn" data-view="view-cmd">
-            <span class="label">Comandante</span>
-          </button>
+          <button class="nav-btn" data-view="view-pa"><span class="label">Praça Auxiliar</span></button>
+          <button class="nav-btn" data-view="view-sub"><span class="label">Subcomando</span></button>
+          <button class="nav-btn" data-view="view-cmd"><span class="label">Comandante</span></button>
         </div>
       </div>
 
       <div class="sidebar-footer">
         Sistema interno — ROTA GTA RP<br />
-        <span style="color:var(--accent);">Uso exclusivo do batalhão.</span>
+        <span style="color:var(--accent);">Acesso restrito (PA/Sub/Cmd/Maj).</span>
       </div>
     </aside>
 
-    <!-- MAIN -->
     <div class="main">
       <header class="topbar">
         <div>
           <div class="topbar-title" id="topbar-title">Visão Geral</div>
-          <div class="topbar-sub">Fluxo: Policial → Praça Auxiliar → Subcomando → Comandante</div>
+          <div class="topbar-sub" id="topbar-sub">Gestão interna por etapa e companhia</div>
         </div>
 
         <div class="topbar-right">
           <div id="user-badge" style="line-height:1.2;">Carregando perfil...</div>
           <button class="btn sm" id="btn-logout" style="margin-top:8px;">Sair</button>
           <br />
-          <span class="tag-pill"><strong>Modo</strong> RP Administrativo</span>
+          <span class="tag-pill"><strong>Modo</strong> Gestão interna</span>
         </div>
       </header>
 
       <main class="content">
-        <!-- DASHBOARD -->
         <section id="view-dashboard" class="view active">
-          <div class="section-title">Situação das demandas</div>
-          <div class="grid" id="dashboard-cards">
-            <div class="card">
+          <div class="section-title">
+            <span>Visão geral (o que importa agora)</span>
+            <span class="badge gray" id="badge-sla">SLA: calculando…</span>
+          </div>
+
+          <div class="grid">
+            <div class="card" onclick="quickFilter({status:'Pendente'})">
               <div class="card-header">
                 <div>
                   <div class="card-title">Pendentes</div>
-                  <div class="card-subtitle">Aguardando tratamento inicial</div>
+                  <div class="card-subtitle">Aguardando movimentação</div>
                 </div>
-                <span class="badge">Pendente</span>
+                <span class="badge yellow">Pendente</span>
               </div>
               <div class="stat-number" id="stat-pendente">0</div>
-              <div class="stat-label">Solicitações recém-abertas.</div>
+              <div class="stat-label">Priorize as críticas e antigas.</div>
             </div>
 
-            <div class="card">
+            <div class="card" onclick="quickFilter({status:'Em análise'})">
               <div class="card-header">
                 <div>
-                  <div class="card-title">Em análise / Escaladas</div>
-                  <div class="card-subtitle">Na mão do PA, Sub ou Cmd</div>
+                  <div class="card-title">Em análise</div>
+                  <div class="card-subtitle">Em andamento (PA/Sub/Cmd)</div>
                 </div>
-                <span class="badge">Em fluxo</span>
+                <span class="badge blue">Em fluxo</span>
               </div>
               <div class="stat-number" id="stat-analise">0</div>
-              <div class="stat-label">Demandas ativas na hierarquia.</div>
+              <div class="stat-label">Casos ativos na hierarquia.</div>
             </div>
 
-            <div class="card">
+            <div class="card" onclick="quickFilter({status:'Resolvido'})">
               <div class="card-header">
                 <div>
                   <div class="card-title">Resolvidas</div>
-                  <div class="card-subtitle">Casos encerrados</div>
+                  <div class="card-subtitle">Encerradas (decisão aplicada)</div>
                 </div>
-                <span class="badge">Resolvido</span>
+                <span class="badge green">OK</span>
               </div>
               <div class="stat-number" id="stat-resolvido">0</div>
-              <div class="stat-label">Inclui acordos internos e decisões.</div>
+              <div class="stat-label">Inclui ações internas e decisões.</div>
+            </div>
+
+            <div class="card" onclick="quickFilter({status:'Arquivado'})">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Arquivadas</div>
+                  <div class="card-subtitle">Histórico / consulta</div>
+                </div>
+                <span class="badge gray">Arquivo</span>
+              </div>
+              <div class="stat-number" id="stat-arquivado">0</div>
+              <div class="stat-label">Maj pode reabrir se necessário.</div>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Principais tipos (últimos registros visíveis)</div>
+                  <div class="card-subtitle">Onde está concentrando a atenção</div>
+                </div>
+                <span class="badge gray">Por tipo</span>
+              </div>
+              <div id="dash-types" style="font-size:12px;line-height:1.55;color:var(--text);"></div>
             </div>
 
             <div class="card">
               <div class="card-header">
                 <div>
-                  <div class="card-title">Arquivadas</div>
-                  <div class="card-subtitle">Para histórico e consulta</div>
+                  <div class="card-title">Alertas de antiguidade</div>
+                  <div class="card-subtitle">Pendências paradas tempo demais</div>
                 </div>
-                <span class="badge">Arquivo</span>
+                <span class="badge red">Atenção</span>
               </div>
-              <div class="stat-number" id="stat-arquivado">0</div>
-              <div class="stat-label">Registros mantidos apenas como histórico.</div>
+              <div id="dash-aging" style="font-size:12px;line-height:1.55;"></div>
             </div>
           </div>
         </section>
-
-        <!-- REGISTROS (GERAL) -->
         <section id="view-registros" class="view">
-          <div class="section-title">Registros internos</div>
+          <div class="section-title">
+            <span>Demandas internas</span>
+            <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="btn sm" onclick="quickFilter({priority:'Crítica'})">Ver críticas</button>
+              <button class="btn sm" onclick="quickFilter({stage:'PA'})">Etapa PA</button>
+              <button class="btn sm" onclick="quickFilter({stage:'SUB'})">Etapa SUB</button>
+              <button class="btn sm" onclick="quickFilter({stage:'CMD'})">Etapa CMD</button>
+            </span>
+          </div>
+
           <div class="flex-row">
             <div class="card flex-1">
               <div class="card-header">
-                <div class="card-title">Novo registro</div>
-                <div class="card-subtitle">Abertura de demanda pelo policial ou superior</div>
+                <div>
+                  <div class="card-title">Nova demanda</div>
+                  <div class="card-subtitle">Registro interno (feito por quem está logado)</div>
+                </div>
+                <span class="badge gray" id="badge-registrado-por">Registrado por: -</span>
               </div>
+
               <form id="form-novo-registro">
-                <div class="field-group">
-                  <div class="field-label">Nome do policial</div>
-                  <input class="input" name="officer_name" required placeholder="Ex.: Sd. Maggi" />
+                <div class="flex-row" style="gap:12px;">
+                  <div class="field-group flex-1">
+                    <div class="field-label">Nome do policial</div>
+                    <input class="input" name="officer_name" required placeholder="Ex.: Sd. Maggi" />
+                  </div>
+
+                  <div class="field-group" style="min-width:220px;">
+                    <div class="field-label">Companhia</div>
+                    <select class="select" name="company" required id="company-select">
+                      <option value="Caveiras">Companhia Caveiras</option>
+                      <option value="Boinas Pretas">Companhia Boinas Pretas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex-row" style="gap:12px;">
+                  <div class="field-group flex-1">
+                    <div class="field-label">Tipo</div>
+                    <select class="select" name="type" required>
+                      <option>Disciplina / Conduta</option>
+                      <option>Assiduidade / Pontualidade</option>
+                      <option>Desempenho operacional</option>
+                      <option>Conflito interno</option>
+                      <option>Solicitação administrativa</option>
+                      <option>Elogio / Destaque</option>
+                    </select>
+                  </div>
+
+                  <div class="field-group" style="min-width:220px;">
+                    <div class="field-label">Prioridade</div>
+                    <select class="select" name="priority" required>
+                      <option>Baixa</option>
+                      <option selected>Média</option>
+                      <option>Alta</option>
+                      <option>Crítica</option>
+                    </select>
+                  </div>
+
+                  <div class="field-group" style="min-width:260px;">
+                    <div class="field-label">Origem da informação</div>
+                    <select class="select" name="source" required>
+                      <option>Observação do PA</option>
+                      <option>Relato do Sub</option>
+                      <option>Queixa ao Comandante</option>
+                      <option>Relato em patrulha (RSO)</option>
+                      <option>Via Ponto Online</option>
+                      <option>Outro</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div class="field-group">
-                  <div class="field-label">Companhia</div>
-                  <select class="select" name="company" required id="company-select">
-                    <option value="Caveiras">Companhia Caveiras</option>
-                    <option value="Boinas Pretas">Companhia Boinas Pretas</option>
-                  </select>
+                  <div class="field-label">Descrição</div>
+                  <textarea class="textarea" name="description" required placeholder="Descreva com clareza: fatos, envolvidos, contexto e o que você quer que aconteça."></textarea>
                 </div>
 
                 <div class="field-group">
-                  <div class="field-label">Quem está abrindo?</div>
-                  <select class="select" name="origin_role" required>
-                    <option value="Policial">Policial</option>
-                    <option value="Praça Auxiliar">Praça Auxiliar</option>
-                    <option value="Subcomandante">Subcomandante</option>
-                    <option value="Comandante">Comandante</option>
-                  </select>
+                  <div class="field-label">Observação interna (opcional)</div>
+                  <textarea class="textarea" name="internal_notes" placeholder="Ex.: reincidente, conversa inicial feita, evidência no RSO, etc."></textarea>
                 </div>
 
-                <div class="field-group">
-                  <div class="field-label">Descrição da ocorrência</div>
-                  <textarea class="textarea" name="description" required placeholder="Descreva o problema, conflito ou solicitação..."></textarea>
-                </div>
-
-                <div class="field-group">
-                  <div class="field-label">Seu nome / patente (para registro)</div>
-                  <input class="input" name="last_updated_by" placeholder="Ex.: Maj Coordop, 1º Sgt. Cordeiro..." />
-                </div>
-
-                <button type="submit" class="btn primary">Registrar demanda</button>
+                <button type="submit" class="btn primary">Registrar</button>
               </form>
             </div>
 
             <div class="card flex-1">
               <div class="card-header">
-                <div class="card-title">Filtros rápidos</div>
-                <div class="card-subtitle">Aplicados sobre o que o perfil pode ver</div>
+                <div class="card-title">Filtros</div>
+                <div class="card-subtitle">Refine o que você precisa ver agora</div>
+              </div>
+
+              <div class="flex-row" style="gap:12px;">
+                <div class="field-group flex-1">
+                  <div class="field-label">Status</div>
+                  <select id="filter-status" class="select">
+                    <option value="todos">Todos</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em análise">Em análise</option>
+                    <option value="Resolvido">Resolvido</option>
+                    <option value="Arquivado">Arquivado</option>
+                  </select>
+                </div>
+
+                <div class="field-group flex-1">
+                  <div class="field-label">Etapa</div>
+                  <select id="filter-stage" class="select">
+                    <option value="todas">Todas</option>
+                    <option value="PA">PA</option>
+                    <option value="SUB">SUB</option>
+                    <option value="CMD">CMD</option>
+                  </select>
+                </div>
+
+                <div class="field-group flex-1">
+                  <div class="field-label">Prioridade</div>
+                  <select id="filter-priority" class="select">
+                    <option value="todas">Todas</option>
+                    <option value="Baixa">Baixa</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Crítica">Crítica</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex-row" style="gap:12px;">
+                <div class="field-group flex-1">
+                  <div class="field-label">Companhia</div>
+                  <select id="filter-company" class="select">
+                    <option value="todas">Todas</option>
+                    <option value="Caveiras">Caveiras</option>
+                    <option value="Boinas Pretas">Boinas Pretas</option>
+                  </select>
+                </div>
+
+                <div class="field-group flex-1">
+                  <div class="field-label">Tipo</div>
+                  <select id="filter-type" class="select">
+                    <option value="todos">Todos</option>
+                    <option>Disciplina / Conduta</option>
+                    <option>Assiduidade / Pontualidade</option>
+                    <option>Desempenho operacional</option>
+                    <option>Conflito interno</option>
+                    <option>Solicitação administrativa</option>
+                    <option>Elogio / Destaque</option>
+                  </select>
+                </div>
               </div>
 
               <div class="field-group">
-                <div class="field-label">Status</div>
-                <select id="filter-status" class="select">
-                  <option value="todos">Todos</option>
-                  <option value="Pendente">Pendente</option>
-                  <option value="Em análise">Em análise</option>
-                  <option value="Resolvido">Resolvido</option>
-                  <option value="Arquivado">Arquivado</option>
-                </select>
+                <div class="field-label">Buscar (nome/descrição/notas)</div>
+                <input id="filter-search" class="input" placeholder="Digite parte do nome, da descrição ou observação..." />
               </div>
 
-              <div class="field-group">
-                <div class="field-label">Companhia</div>
-                <select id="filter-company" class="select">
-                  <option value="todas">Todas</option>
-                  <option value="Caveiras">Caveiras</option>
-                  <option value="Boinas Pretas">Boinas Pretas</option>
-                </select>
+              <div class="flex-row" style="gap:10px;">
+                <button type="button" class="btn" id="btn-clear-filters">Limpar</button>
+                <button type="button" class="btn" onclick="quickFilter({olderThanDays:7})">Paradas 7+ dias</button>
+                <button type="button" class="btn" onclick="quickFilter({olderThanDays:14})">Paradas 14+ dias</button>
               </div>
-
-              <div class="field-group">
-                <div class="field-label">Buscar por nome / descrição</div>
-                <input id="filter-search" class="input" placeholder="Digite parte do nome ou do texto..." />
-              </div>
-
-              <button type="button" class="btn" id="btn-clear-filters">Limpar filtros</button>
             </div>
           </div>
 
@@ -660,6 +691,8 @@
                   <th>Data</th>
                   <th>Policial</th>
                   <th>Cia</th>
+                  <th>Tipo</th>
+                  <th>Prioridade</th>
                   <th>Status</th>
                   <th>Etapa</th>
                   <th>Descrição</th>
@@ -669,27 +702,76 @@
               <tbody id="tbody-registros"></tbody>
             </table>
           </div>
+          <div style="margin-top:10px;color:var(--text-muted);font-size:11px;">
+            Dica: clique em uma linha para abrir o <strong>detalhe + linha do tempo</strong>.
+          </div>
         </section>
 
-        <!-- COMPANHIA CAVEIRAS -->
+        <section id="view-relatorios" class="view">
+          <div class="section-title">
+            <span>Relatórios (Maj Coordop)</span>
+            <span class="badge gray">Comparativos & indicadores</span>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Comparativo por Companhia</div>
+                  <div class="card-subtitle">Volume e pendências</div>
+                </div>
+              </div>
+              <div id="rel-compare" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">SLA (tempo médio visível)</div>
+                  <div class="card-subtitle">Estimativa por tempo desde criação</div>
+                </div>
+              </div>
+              <div id="rel-sla" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Radar de Tipos (por Cia)</div>
+                  <div class="card-subtitle">Onde está “puxando” mais</div>
+                </div>
+              </div>
+              <div id="rel-types" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Pendências antigas (Top)</div>
+                  <div class="card-subtitle">Pra atacar o que está travado</div>
+                </div>
+              </div>
+              <div id="rel-old" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+          </div>
+        </section>
+
         <section id="view-cia-alfa" class="view">
-          <div class="section-title">Companhia Caveiras</div>
+          <div class="section-title"><span>Companhia Caveiras</span><span class="badge gray">Fila da Cia</span></div>
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Demandas da Companhia Caveiras</div>
-                <div class="card-subtitle">Tudo o que envolve policiais da Caveiras</div>
+                <div class="card-title">Demandas da Caveiras</div>
+                <div class="card-subtitle">Clique nas linhas para detalhar</div>
               </div>
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Policial</th>
-                    <th>Status</th>
-                    <th>Etapa</th>
-                    <th>Descrição</th>
+                    <th>Data</th><th>Policial</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Etapa</th><th>Descrição</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-cia-alfa"></tbody>
@@ -698,25 +780,20 @@
           </div>
         </section>
 
-        <!-- COMPANHIA BOINAS PRETAS -->
         <section id="view-cia-bravo" class="view">
-          <div class="section-title">Companhia Boinas Pretas</div>
+          <div class="section-title"><span>Companhia Boinas Pretas</span><span class="badge gray">Fila da Cia</span></div>
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Demandas da Companhia Boinas Pretas</div>
-                <div class="card-subtitle">Tudo o que envolve policiais da Boinas Pretas</div>
+                <div class="card-title">Demandas da Boinas Pretas</div>
+                <div class="card-subtitle">Clique nas linhas para detalhar</div>
               </div>
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Policial</th>
-                    <th>Status</th>
-                    <th>Etapa</th>
-                    <th>Descrição</th>
+                    <th>Data</th><th>Policial</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Etapa</th><th>Descrição</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-cia-bravo"></tbody>
@@ -725,27 +802,21 @@
           </div>
         </section>
 
-        <!-- PRAÇA AUXILIAR -->
         <section id="view-pa" class="view">
-          <div class="section-title">Praça Auxiliar</div>
+          <div class="section-title"><span>Etapa PA</span><span class="badge yellow">Ação do Praça Auxiliar</span></div>
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Demandas na mão do Praça Auxiliar</div>
-                <div class="card-subtitle">Ponto de entrada da hierarquia</div>
+                <div class="card-title">Na mão do PA</div>
+                <div class="card-subtitle">Resolver ou escalar para Sub</div>
               </div>
-              <span class="badge">Etapa: PA</span>
+              <span class="badge yellow">PA</span>
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Policial</th>
-                    <th>Cia</th>
-                    <th>Status</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
+                    <th>Data</th><th>Policial</th><th>Cia</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th><th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-pa"></tbody>
@@ -754,27 +825,21 @@
           </div>
         </section>
 
-        <!-- SUBCOMANDO -->
         <section id="view-sub" class="view">
-          <div class="section-title">Subcomando</div>
+          <div class="section-title"><span>Etapa SUB</span><span class="badge blue">Ação do Subcomando</span></div>
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Demandas escaladas ao Subcomando</div>
-                <div class="card-subtitle">Casos que o PA não resolveu</div>
+                <div class="card-title">No Subcomando</div>
+                <div class="card-subtitle">Resolver, devolver ao PA ou escalar</div>
               </div>
-              <span class="badge">Etapa: SUB</span>
+              <span class="badge blue">SUB</span>
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Policial</th>
-                    <th>Cia</th>
-                    <th>Status</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
+                    <th>Data</th><th>Policial</th><th>Cia</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th><th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-sub"></tbody>
@@ -783,27 +848,21 @@
           </div>
         </section>
 
-        <!-- COMANDANTE -->
         <section id="view-cmd" class="view">
-          <div class="section-title">Comandante</div>
+          <div class="section-title"><span>Etapa CMD</span><span class="badge green">Decisão do Comando</span></div>
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Demandas escaladas ao Comandante</div>
-                <div class="card-subtitle">Última instância</div>
+                <div class="card-title">No Comandante</div>
+                <div class="card-subtitle">Decidir e encerrar com registro</div>
               </div>
-              <span class="badge">Etapa: CMD</span>
+              <span class="badge green">CMD</span>
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Policial</th>
-                    <th>Cia</th>
-                    <th>Status</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
+                    <th>Data</th><th>Policial</th><th>Cia</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th><th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-cmd"></tbody>
@@ -814,520 +873,3 @@
       </main>
     </div>
   </div>
-
-  <script>
-    // --------- SUPABASE CONFIG ---------
-    const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
-
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // ====== MAPA DE ACESSO (USER_ID -> FUNCAO/COMPANHIA) ======
-    const USER_ACCESS_MAP = {
-      // PAs
-      "11057ce9-2824-4faf-bef4-ee1083379b07": { nome: "PA Caveiras", funcao: "PA", companhia: "CAVEIRAS" },
-      "bb475fec-c7b3-4dc8-a943-2892be15f84c": { nome: "PA Boinas Pretas", funcao: "PA", companhia: "BOINAS_PRETAS" },
-
-      // SUB
-      "f3890539-8ab2-4a6a-9ff0-0045f1c8aaf3": { nome: "Sub Caveiras", funcao: "SUB", companhia: "CAVEIRAS" },
-      "88f89dc6-bcd4-40d1-b227-06963aed53e3": { nome: "Sub Boinas Pretas", funcao: "SUB", companhia: "BOINAS_PRETAS" },
-
-      // COMANDO
-      "bad61396-b540-47a8-8233-8fafc3985e0a": { nome: "Comando Caveiras", funcao: "COMANDO", companhia: "CAVEIRAS" },
-      "9cc1efea-0469-4b10-8fad-1eb98027d3f9": { nome: "Comando Boinas Pretas", funcao: "COMANDO", companhia: "BOINAS_PRETAS" },
-
-      // COORDOP (vê tudo)
-      "7c8b8e53-1807-42e6-ae72-d855c285ad31": { nome: "Maj Coordop", funcao: "COORDOP", companhia: "TODAS" }
-    };
-
-    let allReports = [];
-    let currentAccess = null; // { nome, funcao, companhia }
-
-    // ====== COMPANHIA (compatível com registros antigos Alfa/Bravo) ======
-    function normalizeCompany(raw) {
-      const v = String(raw || "").trim().toUpperCase();
-      if (v === "ALFA" || v === "CAVEIRAS") return "CAVEIRAS";
-      if (v === "BRAVO" || v === "BOINAS PRETAS" || v === "BOINAS_PRETAS") return "BOINAS_PRETAS";
-      return v;
-    }
-
-    function companyLabel(norm) {
-      if (norm === "CAVEIRAS") return "Caveiras";
-      if (norm === "BOINAS_PRETAS") return "Boinas Pretas";
-      return norm;
-    }
-
-    function formatDate(isoString) {
-      if (!isoString) return "-";
-      const d = new Date(isoString);
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, "0");
-      const minutes = String(d.getMinutes()).padStart(2, "0");
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
-    }
-
-    function statusClass(status) {
-      if (status === "Pendente") return "pendente";
-      if (status === "Em análise") return "analise";
-      if (status === "Resolvido") return "resolvido";
-      if (status === "Arquivado") return "arquivado";
-      return "pendente";
-    }
-
-    // ====== AUTH + PERFIL ======
-    async function requireAuthAndLoadAccess() {
-      const { data, error } = await sb.auth.getUser();
-
-      if (error || !data?.user) {
-        window.location.href = "./login.html";
-        return false;
-      }
-
-      const userId = data.user.id;
-      const access = USER_ACCESS_MAP[userId];
-
-      if (!access) {
-        alert("Seu usuário logou, mas não possui permissão configurada no painel.");
-        return false;
-      }
-
-      currentAccess = access;
-
-      const badge = document.getElementById("user-badge");
-      if (badge) {
-        const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
-        badge.innerHTML = `<div><strong>${access.nome}</strong></div><div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>`;
-      }
-
-      const btnLogout = document.getElementById("btn-logout");
-      if (btnLogout) {
-        btnLogout.addEventListener("click", async () => {
-          await sb.auth.signOut();
-          window.location.href = "login.html";
-        });
-      }
-
-      return true;
-    }
-
-    // ====== VISUALIZAÇÃO POR COMPANHIA ======
-    function canSeeCompany(normCompany) {
-      if (!currentAccess) return false;
-      if (currentAccess.funcao === "COORDOP") return true;
-      return currentAccess.companhia === normCompany;
-    }
-
-    function filterByAccess(r) {
-      const rc = normalizeCompany(r.company);
-      return canSeeCompany(rc);
-    }
-
-    // ====== REGRAS DE AÇÃO ======
-    function canAction(action, r) {
-      if (!currentAccess) return false;
-
-      const role = currentAccess.funcao;
-      const rc = normalizeCompany(r.company);
-
-      // Se não for Coordop: trava por companhia
-      if (role !== "COORDOP" && currentAccess.companhia !== rc) return false;
-
-      // Coordop pode tudo
-      if (role === "COORDOP") return true;
-
-      if (action === "escalarPA") return false; // só coordop
-      if (action === "marcarEmAnalise") return role === "PA" && r.current_stage === "PA";
-      if (action === "escalarParaSub") return role === "PA" && r.current_stage === "PA";
-      if (action === "escalarParaCmd") return role === "SUB" && r.current_stage === "SUB";
-      if (action === "resolver") return (role === "SUB" && r.current_stage === "SUB") || (role === "COMANDO" && r.current_stage === "CMD");
-      if (action === "arquivar") return role === "COMANDO" && r.current_stage === "CMD";
-      return false;
-    }
-
-    function setSidebarByAccess() {
-      const role = currentAccess.funcao;
-
-      const btnPA = document.querySelector('[data-view="view-pa"]');
-      const btnSUB = document.querySelector('[data-view="view-sub"]');
-      const btnCMD = document.querySelector('[data-view="view-cmd"]');
-
-      if (btnPA) btnPA.style.display = (role === "PA" || role === "COORDOP") ? "" : "none";
-      if (btnSUB) btnSUB.style.display = (role === "SUB" || role === "COORDOP") ? "" : "none";
-      if (btnCMD) btnCMD.style.display = (role === "COMANDO" || role === "COORDOP") ? "" : "none";
-
-      const navCaveiras = document.getElementById("nav-cia-alfa");
-      const navBoinas = document.getElementById("nav-cia-bravo");
-
-      if (role === "COORDOP") {
-        if (navCaveiras) navCaveiras.style.display = "";
-        if (navBoinas) navBoinas.style.display = "";
-      } else if (currentAccess.companhia === "CAVEIRAS") {
-        if (navCaveiras) navCaveiras.style.display = "";
-        if (navBoinas) navBoinas.style.display = "none";
-      } else {
-        if (navCaveiras) navCaveiras.style.display = "none";
-        if (navBoinas) navBoinas.style.display = "";
-      }
-    }
-        function applyCompanyToForm() {
-      const companySelect = document.getElementById("company-select");
-      if (!companySelect || !currentAccess) return;
-
-      if (currentAccess.funcao === "COORDOP") {
-        companySelect.disabled = false;
-        return;
-      }
-
-      companySelect.disabled = true;
-      companySelect.value = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
-    }
-
-    function updateDashboardStats(list) {
-      let pendente = 0, analise = 0, resolvido = 0, arquivado = 0;
-      list.forEach(r => {
-        if (r.status === "Pendente") pendente++;
-        else if (r.status === "Em análise") analise++;
-        else if (r.status === "Resolvido") resolvido++;
-        else if (r.status === "Arquivado") arquivado++;
-      });
-      document.getElementById("stat-pendente").textContent = pendente;
-      document.getElementById("stat-analise").textContent = analise;
-      document.getElementById("stat-resolvido").textContent = resolvido;
-      document.getElementById("stat-arquivado").textContent = arquivado;
-    }
-
-    function actionButtonsForMainTable(r) {
-      const btns = [];
-      if (currentAccess?.funcao === "COORDOP") btns.push(`<button class="btn sm" onclick="escalarPA('${r.id}')">Escalar</button>`);
-      if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-      if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
-      return btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`;
-    }
-
-    function renderTables() {
-      const tbodyReg = document.getElementById("tbody-registros");
-      const tbodyCaveiras = document.getElementById("tbody-cia-alfa");
-      const tbodyBoinas = document.getElementById("tbody-cia-bravo");
-      const tbodyPA = document.getElementById("tbody-pa");
-      const tbodySub = document.getElementById("tbody-sub");
-      const tbodyCmd = document.getElementById("tbody-cmd");
-
-      tbodyReg.innerHTML = "";
-      tbodyCaveiras.innerHTML = "";
-      tbodyBoinas.innerHTML = "";
-      tbodyPA.innerHTML = "";
-      tbodySub.innerHTML = "";
-      tbodyCmd.innerHTML = "";
-
-      const statusFilter = document.getElementById("filter-status")?.value || "todos";
-      const companyFilterRaw = document.getElementById("filter-company")?.value || "todas";
-      const companyFilter = (companyFilterRaw === "todas") ? "todas" : normalizeCompany(companyFilterRaw);
-      const searchFilter = (document.getElementById("filter-search")?.value || "").toLowerCase();
-
-      const visible = allReports.filter(filterByAccess);
-
-      const filtered = visible.filter(r => {
-        if (statusFilter !== "todos" && r.status !== statusFilter) return false;
-
-        const rc = normalizeCompany(r.company);
-        if (companyFilter !== "todas" && rc !== companyFilter) return false;
-
-        if (searchFilter) {
-          const txt = `${r.officer_name} ${r.description}`.toLowerCase();
-          if (!txt.includes(searchFilter)) return false;
-        }
-        return true;
-      });
-
-      // Registros (geral)
-      filtered.forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${formatDate(r.created_at)}</td>
-          <td>${r.officer_name}</td>
-          <td>${companyLabel(normalizeCompany(r.company))}</td>
-          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-          <td>${r.current_stage}</td>
-          <td>${r.description}</td>
-          <td>${actionButtonsForMainTable(r)}</td>
-        `;
-        tbodyReg.appendChild(tr);
-      });
-
-      // Caveiras
-      visible.filter(r => normalizeCompany(r.company) === "CAVEIRAS").forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${formatDate(r.created_at)}</td>
-          <td>${r.officer_name}</td>
-          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-          <td>${r.current_stage}</td>
-          <td>${r.description}</td>
-        `;
-        tbodyCaveiras.appendChild(tr);
-      });
-
-      // Boinas Pretas
-      visible.filter(r => normalizeCompany(r.company) === "BOINAS_PRETAS").forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${formatDate(r.created_at)}</td>
-          <td>${r.officer_name}</td>
-          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-          <td>${r.current_stage}</td>
-          <td>${r.description}</td>
-        `;
-        tbodyBoinas.appendChild(tr);
-      });
-
-      // PA
-      visible
-        .filter(r => r.current_stage === "PA" && r.status !== "Arquivado")
-        .forEach(r => {
-          const tr = document.createElement("tr");
-          const btns = [];
-          if (canAction("marcarEmAnalise", r)) btns.push(`<button class="btn sm" onclick="marcarEmAnalise('${r.id}')">Em análise</button>`);
-          if (canAction("escalarParaSub", r)) btns.push(`<button class="btn sm" onclick="escalarParaSub('${r.id}')">Escalar p/ Sub</button>`);
-          tr.innerHTML = `
-            <td>${formatDate(r.created_at)}</td>
-            <td>${r.officer_name}</td>
-            <td>${companyLabel(normalizeCompany(r.company))}</td>
-            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-            <td>${r.description}</td>
-            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
-          `;
-          tbodyPA.appendChild(tr);
-        });
-
-      // SUB
-      visible
-        .filter(r => r.current_stage === "SUB" && r.status !== "Arquivado")
-        .forEach(r => {
-          const tr = document.createElement("tr");
-          const btns = [];
-          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-          if (canAction("escalarParaCmd", r)) btns.push(`<button class="btn sm" onclick="escalarParaCmd('${r.id}')">Escalar p/ Cmd</button>`);
-          tr.innerHTML = `
-            <td>${formatDate(r.created_at)}</td>
-            <td>${r.officer_name}</td>
-            <td>${companyLabel(normalizeCompany(r.company))}</td>
-            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-            <td>${r.description}</td>
-            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
-          `;
-          tbodySub.appendChild(tr);
-        });
-
-      // CMD
-      visible
-        .filter(r => r.current_stage === "CMD" && r.status !== "Arquivado")
-        .forEach(r => {
-          const tr = document.createElement("tr");
-          const btns = [];
-          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-          if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
-          tr.innerHTML = `
-            <td>${formatDate(r.created_at)}</td>
-            <td>${r.officer_name}</td>
-            <td>${companyLabel(normalizeCompany(r.company))}</td>
-            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-            <td>${r.description}</td>
-            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
-          `;
-          tbodyCmd.appendChild(tr);
-        });
-
-      updateDashboardStats(visible);
-    }
-
-    async function loadReports() {
-      const { data, error } = await sb
-        .from("rota_reports")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error(error);
-        alert("Erro ao carregar registros do Supabase.");
-        return;
-      }
-
-      allReports = data || [];
-      renderTables();
-    }
-
-    async function createReport(payload) {
-      const { error } = await sb.from("rota_reports").insert(payload);
-      if (error) {
-        console.error(error);
-        alert("Erro ao criar registro.");
-        return false;
-      }
-      return true;
-    }
-
-    async function updateReport(id, fields) {
-      const { error } = await sb.from("rota_reports").update(fields).eq("id", id);
-      if (error) {
-        console.error(error);
-        alert("Erro ao atualizar registro.");
-        return false;
-      }
-      return true;
-    }
-
-    // ====== AÇÕES (com guarda de permissão) ======
-    async function marcarEmAnalise(id) {
-      const r = allReports.find(x => x.id === id);
-      if (!r || !canAction("marcarEmAnalise", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { status: "Em análise" }))) return;
-      await loadReports();
-    }
-
-    async function escalarParaSub(id) {
-      const r = allReports.find(x => x.id === id);
-      if (!r || !canAction("escalarParaSub", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { current_stage: "SUB", status: "Em análise", escalated_to: "Subcomando" }))) return;
-      await loadReports();
-    }
-
-    async function escalarParaCmd(id) {
-      const r = allReports.find(x => x.id === id);
-      if (!r || !canAction("escalarParaCmd", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { current_stage: "CMD", status: "Em análise", escalated_to: "Comandante" }))) return;
-      await loadReports();
-    }
-
-    async function resolver(id) {
-      const r = allReports.find(x => x.id === id);
-      if (!r || !canAction("resolver", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { status: "Resolvido" }))) return;
-      await loadReports();
-    }
-
-    async function arquivar(id) {
-      const r = allReports.find(x => x.id === id);
-      if (!r || !canAction("arquivar", r)) return alert("Sem permissão.");
-      if (!confirm("Arquivar este registro?")) return;
-      if (!(await updateReport(id, { status: "Arquivado" }))) return;
-      await loadReports();
-    }
-
-    async function escalarPA(id) {
-      if (currentAccess?.funcao !== "COORDOP") return alert("Sem permissão.");
-      const r = allReports.find(x => x.id === id);
-      if (!r) return;
-      if (r.current_stage === "PA") {
-        alert("Já está sob responsabilidade do Praça Auxiliar.");
-        return;
-      }
-      if (!(await updateReport(id, { current_stage: "PA", status: "Em análise", escalated_to: "Praça Auxiliar" }))) return;
-      await loadReports();
-    }
-
-    // Expor globalmente
-    window.marcarEmAnalise = marcarEmAnalise;
-    window.escalarParaSub = escalarParaSub;
-    window.escalarParaCmd = escalarParaCmd;
-    window.resolver = resolver;
-    window.arquivar = arquivar;
-    window.escalarPA = escalarPA;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      (async () => {
-        const ok = await requireAuthAndLoadAccess();
-        if (!ok) return;
-
-        const navBtns = document.querySelectorAll(".nav-btn");
-        const views = document.querySelectorAll(".view");
-        const topbarTitle = document.getElementById("topbar-title");
-
-        setSidebarByAccess();
-        applyCompanyToForm();
-
-        navBtns.forEach(btn => {
-          btn.addEventListener("click", () => {
-            if (btn.style.display === "none") return;
-
-            navBtns.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-
-            const target = btn.getAttribute("data-view");
-            views.forEach(v => v.classList.remove("active"));
-            document.getElementById(target).classList.add("active");
-
-            const labels = {
-              "view-dashboard": "Visão Geral",
-              "view-registros": "Registros",
-              "view-cia-alfa": "Companhia Caveiras",
-              "view-cia-bravo": "Companhia Boinas Pretas",
-              "view-pa": "Praça Auxiliar",
-              "view-sub": "Subcomando",
-              "view-cmd": "Comandante"
-            };
-            topbarTitle.textContent = labels[target] || "Painel";
-          });
-        });
-
-        const form = document.getElementById("form-novo-registro");
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const formData = new FormData(form);
-
-          const officer_name = String(formData.get("officer_name") || "").trim();
-          const company = String(formData.get("company") || "");
-          const origin_role = String(formData.get("origin_role") || "");
-          const description = String(formData.get("description") || "").trim();
-          const last_updated_by = String(formData.get("last_updated_by") || "").trim();
-
-          if (!officer_name || !company || !origin_role || !description) {
-            alert("Preencha todos os campos obrigatórios.");
-            return;
-          }
-
-          // trava companhia se não for coordop
-          if (currentAccess.funcao !== "COORDOP") {
-            const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
-            if (company !== must) {
-              alert("Companhia inválida para seu perfil.");
-              return;
-            }
-          }
-
-          const payload = {
-            officer_name,
-            company,
-            origin_role,
-            description,
-            current_stage: "PA",
-            status: "Pendente",
-            last_updated_by: last_updated_by || origin_role
-          };
-
-          const ok = await createReport(payload);
-          if (!ok) return;
-
-          form.reset();
-          applyCompanyToForm();
-          await loadReports();
-        });
-
-        document.getElementById("filter-status").addEventListener("change", renderTables);
-        document.getElementById("filter-company").addEventListener("change", renderTables);
-        document.getElementById("filter-search").addEventListener("input", renderTables);
-        document.getElementById("btn-clear-filters").addEventListener("click", () => {
-          document.getElementById("filter-status").value = "todos";
-          document.getElementById("filter-company").value = "todas";
-          document.getElementById("filter-search").value = "";
-          renderTables();
-        });
-
-        await loadReports();
-      })();
-    });
-  </script>
-</body>
-</html>
