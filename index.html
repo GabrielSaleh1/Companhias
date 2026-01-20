@@ -1105,15 +1105,23 @@
       filtered.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${formatDate(r.created_at)}</td>
-          <td>${r.officer_name}</td>
-          <td>${companyLabel(normalizeCompany(r.company))}</td>
-          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
-          <td>${r.current_stage}</td>
-          <td>${r.description}</td>
-          <td>${actionButtonsForMainTable(r)}</td>
-        `;
-        tbodyReg.appendChild(tr);
+  <td>${formatDate(r.created_at)}</td>
+  <td>${r.officer_name}</td>
+  <td>${companyLabel(normalizeCompany(r.company))}</td>
+
+  <td>${r.type || '-'}</td>
+  <td>${r.priority || '-'}</td>
+
+  <td>
+    <span class="status-dot ${statusClass(r.status)}"></span>
+    ${r.status}
+  </td>
+
+  <td>${r.current_stage}</td>
+  <td>${r.description}</td>
+
+  <td>${actionButtonsForMainTable(r)}</td>
+`;
       });
 
       // Caveiras
