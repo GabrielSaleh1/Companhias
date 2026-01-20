@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — 1º BPCHQ ROTA</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#020617;
+      --border:#1f2937;
+      --accent:#facc15;
+      --accent-soft:rgba(250,204,21,.12);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --danger:#f97373;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:radial-gradient(circle at top,#0b1120 0,#020617 50%,#000 100%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .card{
+      width:100%;
+      max-width:420px;
+      background:rgba(15,23,42,.9);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:18px;
+    }
+    .title{
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin:0 0 6px 0;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:12px;
+      margin:0 0 14px 0;
+    }
+    .field{margin-bottom:10px}
+    .label{
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .input{
+      width:100%;
+      border-radius:10px;
+      border:1px solid #334155;
+      background:#020617;
+      color:var(--text);
+      padding:10px;
+      font-size:13px;
+      outline:none;
+    }
+    .btn{
+      width:100%;
+      border:none;
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
+      background:var(--accent-soft);
+      border:1px solid rgba(250,204,21,.7);
+      color:var(--accent);
+      font-weight:700;
+      margin-top:6px;
+    }
+    .msg{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      min-height:18px;
+    }
+    .msg.err{color:var(--danger)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 class="title">1º BPCHQ ROTA</h1>
+    <p class="sub">Acesso restrito — faça login para entrar no painel.</p>
+
+    <form id="login-form">
+      <div class="field">
+        <div class="label">E-mail</div>
+        <input class="input" type="email" name="email" required placeholder="seuemail@exemplo.com" />
+      </div>
+      <div class="field">
+        <div class="label">Senha</div>
+        <input class="input" type="password" name="password" required placeholder="••••••••" />
+      </div>
+      <button class="btn" type="submit">Entrar</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function redirectIfLogged() {
+      const { data } = await sb.auth.getUser();
+      if (data?.user) window.location.href = "index.html";
+    }
+    redirectIfLogged();
+
+    const form = document.getElementById("login-form");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "";
+      msg.className = "msg";
+
+      const fd = new FormData(form);
+      const email = String(fd.get("email") || "").trim();
+      const password = String(fd.get("password") || "").trim();
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        msg.textContent = "Falha no login: " + error.message;
+        msg.className = "msg err";
+        return;
+      }
+
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
