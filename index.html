@@ -1,132 +1,1283 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROTA • Companhias (ULTRA)</title>
-<style>
-body{margin:0;font-family:Arial;background:#0b0f16;color:#e5e7eb;}
-.sidebar{width:260px;position:fixed;top:0;bottom:0;left:0;background:rgba(255,255,255,.04);backdrop-filter:blur(12px);border-right:1px solid rgba(255,255,255,.1);padding:20px;}
-.content{margin-left:260px;padding:30px;}
-.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:20px;border-radius:16px;margin-bottom:20px;}
-.table{width:100%;border-collapse:collapse;}
-.table th,.table td{padding:10px;border-bottom:1px solid rgba(255,255,255,.1);}
-.btn{padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e5e7eb;cursor:pointer;}
-.btn:hover{background:rgba(255,255,255,.12);}
-.nav-btn{display:block;margin-bottom:10px;padding:10px;border-radius:10px;color:#e5e7eb;text-decoration:none;}
-.nav-btn:hover{background:rgba(255,255,255,.12);}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Companhias — 1º BPCHQ ROTA</title>
+
+  <!-- Supabase JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --border-subtle: #1f2937;
+      --accent: #facc15;
+      --accent-soft: rgba(250, 204, 21, 0.12);
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --success: #4ade80;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 50%, #000 100%);
+      color: var(--text);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 260px;
+      background: #020617;
+      border-right: 1px solid var(--border-subtle);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: var(--accent);
+      background: radial-gradient(circle, rgba(250, 204, 21, 0.15), transparent);
+    }
+
+    .brand-text-title {
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-text-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 9px 10px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.1s, color 0.1s, transform 0.05s;
+    }
+
+    .nav-btn span.label {
+      flex: 1;
+    }
+
+    .nav-btn:hover {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .nav-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(250, 204, 21, 0.4);
+      transform: translateX(1px);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .topbar-right {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      padding: 2px 8px;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    .tag-pill strong {
+      color: var(--accent);
+      margin-right: 4px;
+    }
+
+    .content {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      padding: 16px 16px 14px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stat-number {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      font-size: 10px;
+      color: var(--accent);
+      background: rgba(250, 204, 21, 0.05);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #111827;
+      color: var(--text);
+      border: 1px solid var(--border-subtle);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn.primary {
+      background: var(--accent-soft);
+      border-color: rgba(250, 204, 21, 0.7);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .btn.danger {
+      border-color: rgba(248, 113, 113, 0.7);
+      color: var(--danger);
+    }
+
+    .btn.sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .btn + .btn {
+      margin-left: 6px;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .flex-1 {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .field-group {
+      margin-bottom: 10px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      border-radius: 9px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: var(--text);
+      padding: 8px 9px;
+      font-size: 13px;
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .table-wrapper {
+      margin-top: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead {
+      background: #020617;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #111827;
+      text-align: left;
+    }
+
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    tbody tr:hover {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .status-dot.pendente { background: #fbbf24; }
+    .status-dot.analise { background: #60a5fa; }
+    .status-dot.resolvido { background: #4ade80; }
+    .status-dot.arquivado { background: #9ca3af; }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 10px;
+      }
+      .sidebar-footer {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">RT</div>
+        <div>
+          <div class="brand-text-title">1º BPCHQ ROTA</div>
+          <div class="brand-text-sub">Sistema interno de companhias</div>
+        </div>
+      </div>
 
-<div class="sidebar">
-<h2>ROTA • Painel</h2>
-<a class="nav-btn" onclick="showView('dashboard')">Dashboard</a>
-<a class="nav-btn" onclick="showView('registros')">Registros</a>
-<a class="nav-btn" onclick="showView('alfa')">Caveiras</a>
-<a class="nav-btn" onclick="showView('bravo')">Boinas Pretas</a>
-<button class="btn" onclick="logout()">Sair</button>
-</div>
+      <div>
+        <div class="sidebar-section-title">Painel</div>
+        <div class="nav-group">
+          <button class="nav-btn active" data-view="view-dashboard">
+            <span class="label">Visão Geral</span>
+          </button>
+          <button class="nav-btn" data-view="view-registros">
+            <span class="label">Registros</span>
+          </button>
+        </div>
+      </div>
 
-<div class="content">
+      <div>
+        <div class="sidebar-section-title">Companhias</div>
+        <div class="nav-group">
+          <button class="nav-btn" data-view="view-cia-alfa" id="nav-cia-alfa">
+            <span class="label">Companhia Caveiras</span>
+          </button>
+          <button class="nav-btn" data-view="view-cia-bravo" id="nav-cia-bravo">
+            <span class="label">Companhia Boinas Pretas</span>
+          </button>
+        </div>
+      </div>
 
-<div id="dashboard" class="view">
-  <div class="card"><h3>Pendentes:</h3><div id="stat-pendente">0</div></div>
-  <div class="card"><h3>Em análise:</h3><div id="stat-analise">0</div></div>
-  <div class="card"><h3>Resolvidos:</h3><div id="stat-resolvido">0</div></div>
-  <div class="card"><h3>Arquivados:</h3><div id="stat-arquivado">0</div></div>
-</div>
+      <div>
+        <div class="sidebar-section-title">Funções</div>
+        <div class="nav-group">
+          <button class="nav-btn" data-view="view-pa">
+            <span class="label">Praça Auxiliar</span>
+          </button>
+          <button class="nav-btn" data-view="view-sub">
+            <span class="label">Subcomando</span>
+          </button>
+          <button class="nav-btn" data-view="view-cmd">
+            <span class="label">Comandante</span>
+          </button>
+        </div>
+      </div>
 
-<div id="registros" class="view" style="display:none">
-  <div class="card">
-    <h3>Registros gerais</h3>
-    <table class="table"><thead><tr><th>Data</th><th>Policial</th><th>Cia</th><th>Status</th></tr></thead>
-    <tbody id="tbody-registros"></tbody></table>
+      <div class="sidebar-footer">
+        Sistema interno — ROTA GTA RP<br />
+        <span style="color:var(--accent);">Uso exclusivo do batalhão.</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <div class="topbar-title" id="topbar-title">Visão Geral</div>
+          <div class="topbar-sub">Fluxo: Policial → Praça Auxiliar → Subcomando → Comandante</div>
+        </div>
+
+        <div class="topbar-right">
+          <div id="user-badge" style="line-height:1.2;">Carregando perfil...</div>
+          <button class="btn sm" id="btn-logout" style="margin-top:8px;">Sair</button>
+          <br />
+          <span class="tag-pill"><strong>Modo</strong> RP Administrativo</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view active">
+          <div class="section-title">Situação das demandas</div>
+          <div class="grid" id="dashboard-cards">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Pendentes</div>
+                  <div class="card-subtitle">Aguardando tratamento inicial</div>
+                </div>
+                <span class="badge">Pendente</span>
+              </div>
+              <div class="stat-number" id="stat-pendente">0</div>
+              <div class="stat-label">Solicitações recém-abertas.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Em análise / Escaladas</div>
+                  <div class="card-subtitle">Na mão do PA, Sub ou Cmd</div>
+                </div>
+                <span class="badge">Em fluxo</span>
+              </div>
+              <div class="stat-number" id="stat-analise">0</div>
+              <div class="stat-label">Demandas ativas na hierarquia.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Resolvidas</div>
+                  <div class="card-subtitle">Casos encerrados</div>
+                </div>
+                <span class="badge">Resolvido</span>
+              </div>
+              <div class="stat-number" id="stat-resolvido">0</div>
+              <div class="stat-label">Inclui acordos internos e decisões.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Arquivadas</div>
+                  <div class="card-subtitle">Para histórico e consulta</div>
+                </div>
+                <span class="badge">Arquivo</span>
+              </div>
+              <div class="stat-number" id="stat-arquivado">0</div>
+              <div class="stat-label">Registros mantidos apenas como histórico.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- REGISTROS (GERAL) -->
+        <section id="view-registros" class="view">
+          <div class="section-title">Registros internos</div>
+          <div class="flex-row">
+            <div class="card flex-1">
+              <div class="card-header">
+                <div class="card-title">Novo registro</div>
+                <div class="card-subtitle">Abertura de demanda pelo policial ou superior</div>
+              </div>
+              <form id="form-novo-registro">
+                <div class="field-group">
+                  <div class="field-label">Nome do policial</div>
+                  <input class="input" name="officer_name" required placeholder="Ex.: Sd. Maggi" />
+                </div>
+
+                <div class="field-group">
+                  <div class="field-label">Companhia</div>
+                  <select class="select" name="company" required id="company-select">
+                    <option value="Caveiras">Companhia Caveiras</option>
+                    <option value="Boinas Pretas">Companhia Boinas Pretas</option>
+                  </select>
+                </div>
+
+                <div class="field-group">
+                  <div class="field-label">Quem está abrindo?</div>
+                  <select class="select" name="origin_role" required>
+                    <option value="Policial">Policial</option>
+                    <option value="Praça Auxiliar">Praça Auxiliar</option>
+                    <option value="Subcomandante">Subcomandante</option>
+                    <option value="Comandante">Comandante</option>
+                  </select>
+                </div>
+
+                <div class="field-group">
+                  <div class="field-label">Descrição da ocorrência</div>
+                  <textarea class="textarea" name="description" required placeholder="Descreva o problema, conflito ou solicitação..."></textarea>
+                </div>
+
+                <div class="field-group">
+                  <div class="field-label">Seu nome / patente (para registro)</div>
+                  <input class="input" name="last_updated_by" placeholder="Ex.: Maj Coordop, 1º Sgt. Cordeiro..." />
+                </div>
+
+                <button type="submit" class="btn primary">Registrar demanda</button>
+              </form>
+            </div>
+
+            <div class="card flex-1">
+              <div class="card-header">
+                <div class="card-title">Filtros rápidos</div>
+                <div class="card-subtitle">Aplicados sobre o que o perfil pode ver</div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">Status</div>
+                <select id="filter-status" class="select">
+                  <option value="todos">Todos</option>
+                  <option value="Pendente">Pendente</option>
+                  <option value="Em análise">Em análise</option>
+                  <option value="Resolvido">Resolvido</option>
+                  <option value="Arquivado">Arquivado</option>
+                </select>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">Companhia</div>
+                <select id="filter-company" class="select">
+                  <option value="todas">Todas</option>
+                  <option value="Caveiras">Caveiras</option>
+                  <option value="Boinas Pretas">Boinas Pretas</option>
+                </select>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">Buscar por nome / descrição</div>
+                <input id="filter-search" class="input" placeholder="Digite parte do nome ou do texto..." />
+              </div>
+
+              <button type="button" class="btn" id="btn-clear-filters">Limpar filtros</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper" style="margin-top:16px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Policial</th>
+                  <th>Cia</th>
+                  <th>Status</th>
+                  <th>Etapa</th>
+                  <th>Descrição</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-registros"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- COMPANHIA CAVEIRAS -->
+        <section id="view-cia-alfa" class="view">
+          <div class="section-title">Companhia Caveiras</div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Demandas da Companhia Caveiras</div>
+                <div class="card-subtitle">Tudo o que envolve policiais da Caveiras</div>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Policial</th>
+                    <th>Status</th>
+                    <th>Etapa</th>
+                    <th>Descrição</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-cia-alfa"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- COMPANHIA BOINAS PRETAS -->
+        <section id="view-cia-bravo" class="view">
+          <div class="section-title">Companhia Boinas Pretas</div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Demandas da Companhia Boinas Pretas</div>
+                <div class="card-subtitle">Tudo o que envolve policiais da Boinas Pretas</div>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Policial</th>
+                    <th>Status</th>
+                    <th>Etapa</th>
+                    <th>Descrição</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-cia-bravo"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- PRAÇA AUXILIAR -->
+        <section id="view-pa" class="view">
+          <div class="section-title">Praça Auxiliar</div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Demandas na mão do Praça Auxiliar</div>
+                <div class="card-subtitle">Ponto de entrada da hierarquia</div>
+              </div>
+              <span class="badge">Etapa: PA</span>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Policial</th>
+                    <th>Cia</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-pa"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SUBCOMANDO -->
+        <section id="view-sub" class="view">
+          <div class="section-title">Subcomando</div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Demandas escaladas ao Subcomando</div>
+                <div class="card-subtitle">Casos que o PA não resolveu</div>
+              </div>
+              <span class="badge">Etapa: SUB</span>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Policial</th>
+                    <th>Cia</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-sub"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- COMANDANTE -->
+        <section id="view-cmd" class="view">
+          <div class="section-title">Comandante</div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Demandas escaladas ao Comandante</div>
+                <div class="card-subtitle">Última instância</div>
+              </div>
+              <span class="badge">Etapa: CMD</span>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Policial</th>
+                    <th>Cia</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-cmd"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
-</div>
 
-<div id="alfa" class="view" style="display:none">
-  <div class="card">
-    <h3>Caveiras</h3>
-    <table class="table"><tbody id="tbody-cia-alfa"></tbody></table>
-  </div>
-</div>
+  <script>
+    // --------- SUPABASE CONFIG ---------
+    const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
 
-<div id="bravo" class="view" style="display:none">
-  <div class="card">
-    <h3>Boinas Pretas</h3>
-    <table class="table"><tbody id="tbody-cia-bravo"></tbody></table>
-  </div>
-</div>
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-</div>
+    // ====== MAPA DE ACESSO (USER_ID -> FUNCAO/COMPANHIA) ======
+    const USER_ACCESS_MAP = {
+      // PAs
+      "11057ce9-2824-4faf-bef4-ee1083379b07": { nome: "PA Caveiras", funcao: "PA", companhia: "CAVEIRAS" },
+      "bb475fec-c7b3-4dc8-a943-2892be15f84c": { nome: "PA Boinas Pretas", funcao: "PA", companhia: "BOINAS_PRETAS" },
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL="https://ilonwkgtdszmpcjwlezc.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+      // SUB
+      "f3890539-8ab2-4a6a-9ff0-0045f1c8aaf3": { nome: "Sub Caveiras", funcao: "SUB", companhia: "CAVEIRAS" },
+      "88f89dc6-bcd4-40d1-b227-06963aed53e3": { nome: "Sub Boinas Pretas", funcao: "SUB", companhia: "BOINAS_PRETAS" },
 
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+      // COMANDO
+      "bad61396-b540-47a8-8233-8fafc3985e0a": { nome: "Comando Caveiras", funcao: "COMANDO", companhia: "CAVEIRAS" },
+      "9cc1efea-0469-4b10-8fad-1eb98027d3f9": { nome: "Comando Boinas Pretas", funcao: "COMANDO", companhia: "BOINAS_PRETAS" },
 
-let allReports = [];
+      // COORDOP (vê tudo)
+      "7c8b8e53-1807-42e6-ae72-d855c285ad31": { nome: "Maj Coordop", funcao: "COORDOP", companhia: "TODAS" }
+    };
 
-async function init(){
-  const { data } = await sb.auth.getUser();
-  if(!data?.user){ location.href="login.html"; return; }
+    let allReports = [];
+    let currentAccess = null; // { nome, funcao, companhia }
 
-  loadReports();
-}
+    // ====== COMPANHIA (compatível com registros antigos Alfa/Bravo) ======
+    function normalizeCompany(raw) {
+      const v = String(raw || "").trim().toUpperCase();
+      if (v === "ALFA" || v === "CAVEIRAS") return "CAVEIRAS";
+      if (v === "BRAVO" || v === "BOINAS PRETAS" || v === "BOINAS_PRETAS") return "BOINAS_PRETAS";
+      return v;
+    }
 
-async function loadReports(){
-  const { data } = await sb.from("rota_reports").select("*");
-  allReports = data || [];
-  render();
-}
+    function companyLabel(norm) {
+      if (norm === "CAVEIRAS") return "Caveiras";
+      if (norm === "BOINAS_PRETAS") return "Boinas Pretas";
+      return norm;
+    }
 
-function render(){
-  let p=0,a=0,r=0,ar=0;
+    function formatDate(isoString) {
+      if (!isoString) return "-";
+      const d = new Date(isoString);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
 
-  document.getElementById("tbody-registros").innerHTML = "";
-  document.getElementById("tbody-cia-alfa").innerHTML = "";
-  document.getElementById("tbody-cia-bravo").innerHTML = "";
+    function statusClass(status) {
+      if (status === "Pendente") return "pendente";
+      if (status === "Em análise") return "analise";
+      if (status === "Resolvido") return "resolvido";
+      if (status === "Arquivado") return "arquivado";
+      return "pendente";
+    }
 
-  allReports.forEach(x=>{
-    if(x.status==="Pendente") p++;
-    if(x.status==="Em análise") a++;
-    if(x.status==="Resolvido") r++;
-    if(x.status==="Arquivado") ar++;
+    // ====== AUTH + PERFIL ======
+    async function requireAuthAndLoadAccess() {
+      const { data, error } = await sb.auth.getUser();
 
-    const row = `<tr>
-      <td>${new Date(x.created_at).toLocaleString()}</td>
-      <td>${x.officer_name}</td>
-      <td>${x.company}</td>
-      <td>${x.status}</td>
-    </tr>`;
+      if (error || !data?.user) {
+        window.location.href = "./login.html";
+        return false;
+      }
 
-    document.getElementById("tbody-registros").innerHTML += row;
-    if(x.company==="Caveiras") document.getElementById("tbody-cia-alfa").innerHTML += row;
-    if(x.company==="Boinas Pretas") document.getElementById("tbody-cia-bravo").innerHTML += row;
-  });
+      const userId = data.user.id;
+      const access = USER_ACCESS_MAP[userId];
 
-  document.getElementById("stat-pendente").innerText = p;
-  document.getElementById("stat-analise").innerText = a;
-  document.getElementById("stat-resolvido").innerText = r;
-  document.getElementById("stat-arquivado").innerText = ar;
-}
+      if (!access) {
+        alert("Seu usuário logou, mas não possui permissão configurada no painel.");
+        return false;
+      }
 
-function showView(view){
-  document.querySelectorAll(".view").forEach(v=>v.style.display="none");
-  document.getElementById(view).style.display="block";
-}
+      currentAccess = access;
 
-async function logout(){
-  await sb.auth.signOut();
-  location.href="login.html";
-}
+      const badge = document.getElementById("user-badge");
+      if (badge) {
+        const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
+        badge.innerHTML = `<div><strong>${access.nome}</strong></div><div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>`;
+      }
 
-document.addEventListener("DOMContentLoaded", init);
-</script>
+      const btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", async () => {
+          await sb.auth.signOut();
+          window.location.href = "login.html";
+        });
+      }
 
+      return true;
+    }
+
+    // ====== VISUALIZAÇÃO POR COMPANHIA ======
+    function canSeeCompany(normCompany) {
+      if (!currentAccess) return false;
+      if (currentAccess.funcao === "COORDOP") return true;
+      return currentAccess.companhia === normCompany;
+    }
+
+    function filterByAccess(r) {
+      const rc = normalizeCompany(r.company);
+      return canSeeCompany(rc);
+    }
+
+    // ====== REGRAS DE AÇÃO ======
+    function canAction(action, r) {
+      if (!currentAccess) return false;
+
+      const role = currentAccess.funcao;
+      const rc = normalizeCompany(r.company);
+
+      // Se não for Coordop: trava por companhia
+      if (role !== "COORDOP" && currentAccess.companhia !== rc) return false;
+
+      // Coordop pode tudo
+      if (role === "COORDOP") return true;
+
+      if (action === "escalarPA") return false; // só coordop
+      if (action === "marcarEmAnalise") return role === "PA" && r.current_stage === "PA";
+      if (action === "escalarParaSub") return role === "PA" && r.current_stage === "PA";
+      if (action === "escalarParaCmd") return role === "SUB" && r.current_stage === "SUB";
+      if (action === "resolver") return (role === "SUB" && r.current_stage === "SUB") || (role === "COMANDO" && r.current_stage === "CMD");
+      if (action === "arquivar") return role === "COMANDO" && r.current_stage === "CMD";
+      return false;
+    }
+
+    function setSidebarByAccess() {
+      const role = currentAccess.funcao;
+
+      const btnPA = document.querySelector('[data-view="view-pa"]');
+      const btnSUB = document.querySelector('[data-view="view-sub"]');
+      const btnCMD = document.querySelector('[data-view="view-cmd"]');
+
+      if (btnPA) btnPA.style.display = (role === "PA" || role === "COORDOP") ? "" : "none";
+      if (btnSUB) btnSUB.style.display = (role === "SUB" || role === "COORDOP") ? "" : "none";
+      if (btnCMD) btnCMD.style.display = (role === "COMANDO" || role === "COORDOP") ? "" : "none";
+
+      const navCaveiras = document.getElementById("nav-cia-alfa");
+      const navBoinas = document.getElementById("nav-cia-bravo");
+
+      if (role === "COORDOP") {
+        if (navCaveiras) navCaveiras.style.display = "";
+        if (navBoinas) navBoinas.style.display = "";
+      } else if (currentAccess.companhia === "CAVEIRAS") {
+        if (navCaveiras) navCaveiras.style.display = "";
+        if (navBoinas) navBoinas.style.display = "none";
+      } else {
+        if (navCaveiras) navCaveiras.style.display = "none";
+        if (navBoinas) navBoinas.style.display = "";
+      }
+    }
+
+    function applyCompanyToForm() {
+      const companySelect = document.getElementById("company-select");
+      if (!companySelect || !currentAccess) return;
+
+      if (currentAccess.funcao === "COORDOP") {
+        companySelect.disabled = false;
+        return;
+      }
+
+      companySelect.disabled = true;
+      companySelect.value = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
+    }
+
+    function updateDashboardStats(list) {
+      let pendente = 0, analise = 0, resolvido = 0, arquivado = 0;
+      list.forEach(r => {
+        if (r.status === "Pendente") pendente++;
+        else if (r.status === "Em análise") analise++;
+        else if (r.status === "Resolvido") resolvido++;
+        else if (r.status === "Arquivado") arquivado++;
+      });
+      document.getElementById("stat-pendente").textContent = pendente;
+      document.getElementById("stat-analise").textContent = analise;
+      document.getElementById("stat-resolvido").textContent = resolvido;
+      document.getElementById("stat-arquivado").textContent = arquivado;
+    }
+
+    function actionButtonsForMainTable(r) {
+      const btns = [];
+      if (currentAccess?.funcao === "COORDOP") btns.push(`<button class="btn sm" onclick="escalarPA('${r.id}')">Escalar</button>`);
+      if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
+      if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
+      return btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`;
+    }
+
+    function renderTables() {
+      const tbodyReg = document.getElementById("tbody-registros");
+      const tbodyCaveiras = document.getElementById("tbody-cia-alfa");
+      const tbodyBoinas = document.getElementById("tbody-cia-bravo");
+      const tbodyPA = document.getElementById("tbody-pa");
+      const tbodySub = document.getElementById("tbody-sub");
+      const tbodyCmd = document.getElementById("tbody-cmd");
+
+      tbodyReg.innerHTML = "";
+      tbodyCaveiras.innerHTML = "";
+      tbodyBoinas.innerHTML = "";
+      tbodyPA.innerHTML = "";
+      tbodySub.innerHTML = "";
+      tbodyCmd.innerHTML = "";
+
+      const statusFilter = document.getElementById("filter-status")?.value || "todos";
+      const companyFilterRaw = document.getElementById("filter-company")?.value || "todas";
+      const companyFilter = (companyFilterRaw === "todas") ? "todas" : normalizeCompany(companyFilterRaw);
+      const searchFilter = (document.getElementById("filter-search")?.value || "").toLowerCase();
+
+      const visible = allReports.filter(filterByAccess);
+
+      const filtered = visible.filter(r => {
+        if (statusFilter !== "todos" && r.status !== statusFilter) return false;
+
+        const rc = normalizeCompany(r.company);
+        if (companyFilter !== "todas" && rc !== companyFilter) return false;
+
+        if (searchFilter) {
+          const txt = `${r.officer_name} ${r.description}`.toLowerCase();
+          if (!txt.includes(searchFilter)) return false;
+        }
+        return true;
+      });
+
+      // Registros (geral)
+      filtered.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${formatDate(r.created_at)}</td>
+          <td>${r.officer_name}</td>
+          <td>${companyLabel(normalizeCompany(r.company))}</td>
+          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+          <td>${r.current_stage}</td>
+          <td>${r.description}</td>
+          <td>${actionButtonsForMainTable(r)}</td>
+        `;
+        tbodyReg.appendChild(tr);
+      });
+
+      // Caveiras
+      visible.filter(r => normalizeCompany(r.company) === "CAVEIRAS").forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${formatDate(r.created_at)}</td>
+          <td>${r.officer_name}</td>
+          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+          <td>${r.current_stage}</td>
+          <td>${r.description}</td>
+        `;
+        tbodyCaveiras.appendChild(tr);
+      });
+
+      // Boinas Pretas
+      visible.filter(r => normalizeCompany(r.company) === "BOINAS_PRETAS").forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${formatDate(r.created_at)}</td>
+          <td>${r.officer_name}</td>
+          <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+          <td>${r.current_stage}</td>
+          <td>${r.description}</td>
+        `;
+        tbodyBoinas.appendChild(tr);
+      });
+
+      // PA
+      visible
+        .filter(r => r.current_stage === "PA" && r.status !== "Arquivado")
+        .forEach(r => {
+          const tr = document.createElement("tr");
+          const btns = [];
+          if (canAction("marcarEmAnalise", r)) btns.push(`<button class="btn sm" onclick="marcarEmAnalise('${r.id}')">Em análise</button>`);
+          if (canAction("escalarParaSub", r)) btns.push(`<button class="btn sm" onclick="escalarParaSub('${r.id}')">Escalar p/ Sub</button>`);
+          tr.innerHTML = `
+            <td>${formatDate(r.created_at)}</td>
+            <td>${r.officer_name}</td>
+            <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+            <td>${r.description}</td>
+            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
+          `;
+          tbodyPA.appendChild(tr);
+        });
+
+      // SUB
+      visible
+        .filter(r => r.current_stage === "SUB" && r.status !== "Arquivado")
+        .forEach(r => {
+          const tr = document.createElement("tr");
+          const btns = [];
+          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
+          if (canAction("escalarParaCmd", r)) btns.push(`<button class="btn sm" onclick="escalarParaCmd('${r.id}')">Escalar p/ Cmd</button>`);
+          tr.innerHTML = `
+            <td>${formatDate(r.created_at)}</td>
+            <td>${r.officer_name}</td>
+            <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+            <td>${r.description}</td>
+            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
+          `;
+          tbodySub.appendChild(tr);
+        });
+
+      // CMD
+      visible
+        .filter(r => r.current_stage === "CMD" && r.status !== "Arquivado")
+        .forEach(r => {
+          const tr = document.createElement("tr");
+          const btns = [];
+          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
+          if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
+          tr.innerHTML = `
+            <td>${formatDate(r.created_at)}</td>
+            <td>${r.officer_name}</td>
+            <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
+            <td>${r.description}</td>
+            <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
+          `;
+          tbodyCmd.appendChild(tr);
+        });
+
+      updateDashboardStats(visible);
+    }
+
+    async function loadReports() {
+      const { data, error } = await sb
+        .from("rota_reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        alert("Erro ao carregar registros do Supabase.");
+        return;
+      }
+
+      allReports = data || [];
+      renderTables();
+    }
+
+    async function createReport(payload) {
+      const { error } = await sb.from("rota_reports").insert(payload);
+      if (error) {
+        console.error(error);
+        alert("Erro ao criar registro.");
+        return false;
+      }
+      return true;
+    }
+
+    async function updateReport(id, fields) {
+      const { error } = await sb.from("rota_reports").update(fields).eq("id", id);
+      if (error) {
+        console.error(error);
+        alert("Erro ao atualizar registro.");
+        return false;
+      }
+      return true;
+    }
+
+    // ====== AÇÕES (com guarda de permissão) ======
+    async function marcarEmAnalise(id) {
+      const r = allReports.find(x => x.id === id);
+      if (!r || !canAction("marcarEmAnalise", r)) return alert("Sem permissão.");
+      if (!(await updateReport(id, { status: "Em análise" }))) return;
+      await loadReports();
+    }
+
+    async function escalarParaSub(id) {
+      const r = allReports.find(x => x.id === id);
+      if (!r || !canAction("escalarParaSub", r)) return alert("Sem permissão.");
+      if (!(await updateReport(id, { current_stage: "SUB", status: "Em análise", escalated_to: "Subcomando" }))) return;
+      await loadReports();
+    }
+
+    async function escalarParaCmd(id) {
+      const r = allReports.find(x => x.id === id);
+      if (!r || !canAction("escalarParaCmd", r)) return alert("Sem permissão.");
+      if (!(await updateReport(id, { current_stage: "CMD", status: "Em análise", escalated_to: "Comandante" }))) return;
+      await loadReports();
+    }
+
+    async function resolver(id) {
+      const r = allReports.find(x => x.id === id);
+      if (!r || !canAction("resolver", r)) return alert("Sem permissão.");
+      if (!(await updateReport(id, { status: "Resolvido" }))) return;
+      await loadReports();
+    }
+
+    async function arquivar(id) {
+      const r = allReports.find(x => x.id === id);
+      if (!r || !canAction("arquivar", r)) return alert("Sem permissão.");
+      if (!confirm("Arquivar este registro?")) return;
+      if (!(await updateReport(id, { status: "Arquivado" }))) return;
+      await loadReports();
+    }
+
+    async function escalarPA(id) {
+      if (currentAccess?.funcao !== "COORDOP") return alert("Sem permissão.");
+      const r = allReports.find(x => x.id === id);
+      if (!r) return;
+      if (r.current_stage === "PA") {
+        alert("Já está sob responsabilidade do Praça Auxiliar.");
+        return;
+      }
+      if (!(await updateReport(id, { current_stage: "PA", status: "Em análise", escalated_to: "Praça Auxiliar" }))) return;
+      await loadReports();
+    }
+
+    // Expor globalmente
+    window.marcarEmAnalise = marcarEmAnalise;
+    window.escalarParaSub = escalarParaSub;
+    window.escalarParaCmd = escalarParaCmd;
+    window.resolver = resolver;
+    window.arquivar = arquivar;
+    window.escalarPA = escalarPA;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      (async () => {
+        const ok = await requireAuthAndLoadAccess();
+        if (!ok) return;
+
+        const navBtns = document.querySelectorAll(".nav-btn");
+        const views = document.querySelectorAll(".view");
+        const topbarTitle = document.getElementById("topbar-title");
+
+        setSidebarByAccess();
+        applyCompanyToForm();
+
+        navBtns.forEach(btn => {
+          btn.addEventListener("click", () => {
+            if (btn.style.display === "none") return;
+
+            navBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            const target = btn.getAttribute("data-view");
+            views.forEach(v => v.classList.remove("active"));
+            document.getElementById(target).classList.add("active");
+
+            const labels = {
+              "view-dashboard": "Visão Geral",
+              "view-registros": "Registros",
+              "view-cia-alfa": "Companhia Caveiras",
+              "view-cia-bravo": "Companhia Boinas Pretas",
+              "view-pa": "Praça Auxiliar",
+              "view-sub": "Subcomando",
+              "view-cmd": "Comandante"
+            };
+            topbarTitle.textContent = labels[target] || "Painel";
+          });
+        });
+
+        const form = document.getElementById("form-novo-registro");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+
+          const officer_name = String(formData.get("officer_name") || "").trim();
+          const company = String(formData.get("company") || "");
+          const origin_role = String(formData.get("origin_role") || "");
+          const description = String(formData.get("description") || "").trim();
+          const last_updated_by = String(formData.get("last_updated_by") || "").trim();
+
+          if (!officer_name || !company || !origin_role || !description) {
+            alert("Preencha todos os campos obrigatórios.");
+            return;
+          }
+
+          // trava companhia se não for coordop
+          if (currentAccess.funcao !== "COORDOP") {
+            const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
+            if (company !== must) {
+              alert("Companhia inválida para seu perfil.");
+              return;
+            }
+          }
+
+          const payload = {
+            officer_name,
+            company,
+            origin_role,
+            description,
+            current_stage: "PA",
+            status: "Pendente",
+            last_updated_by: last_updated_by || origin_role
+          };
+
+          const ok = await createReport(payload);
+          if (!ok) return;
+
+          form.reset();
+          applyCompanyToForm();
+          await loadReports();
+        });
+
+        document.getElementById("filter-status").addEventListener("change", renderTables);
+        document.getElementById("filter-company").addEventListener("change", renderTables);
+        document.getElementById("filter-search").addEventListener("input", renderTables);
+        document.getElementById("btn-clear-filters").addEventListener("click", () => {
+          document.getElementById("filter-status").value = "todos";
+          document.getElementById("filter-company").value = "todas";
+          document.getElementById("filter-search").value = "";
+          renderTables();
+        });
+
+        await loadReports();
+      })();
+    });
+  </script>
 </body>
 </html>
