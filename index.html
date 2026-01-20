@@ -1119,16 +1119,19 @@
         tbodyReg.appendChild(tr);
       });
 
-      // Caveiras
+            // Caveiras
       visible.filter(r => normalizeCompany(r.company) === "CAVEIRAS").forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${formatDate(r.created_at)}</td>
           <td>${r.officer_name}</td>
+          <td>${r.type || '-'}</td>
+          <td>${r.priority || '-'}</td>
           <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
           <td>${r.current_stage}</td>
           <td>${r.description}</td>
         `;
+        tr.addEventListener("click", () => openModal(r));
         tbodyCaveiras.appendChild(tr);
       });
 
@@ -1138,10 +1141,13 @@
         tr.innerHTML = `
           <td>${formatDate(r.created_at)}</td>
           <td>${r.officer_name}</td>
+          <td>${r.type || '-'}</td>
+          <td>${r.priority || '-'}</td>
           <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
           <td>${r.current_stage}</td>
           <td>${r.description}</td>
         `;
+        tr.addEventListener("click", () => openModal(r));
         tbodyBoinas.appendChild(tr);
       });
 
@@ -1157,10 +1163,13 @@
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
             <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td>${r.type || '-'}</td>
+            <td>${r.priority || '-'}</td>
             <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
             <td>${r.description}</td>
             <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
           `;
+          tr.addEventListener("click", () => openModal(r));
           tbodyPA.appendChild(tr);
         });
 
@@ -1176,10 +1185,13 @@
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
             <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td>${r.type || '-'}</td>
+            <td>${r.priority || '-'}</td>
             <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
             <td>${r.description}</td>
             <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
           `;
+          tr.addEventListener("click", () => openModal(r));
           tbodySub.appendChild(tr);
         });
 
@@ -1195,10 +1207,13 @@
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
             <td>${companyLabel(normalizeCompany(r.company))}</td>
+            <td>${r.type || '-'}</td>
+            <td>${r.priority || '-'}</td>
             <td><span class="status-dot ${statusClass(r.status)}"></span>${r.status}</td>
             <td>${r.description}</td>
             <td>${btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`}</td>
           `;
+          tr.addEventListener("click", () => openModal(r));
           tbodyCmd.appendChild(tr);
         });
 
@@ -1441,4 +1456,3 @@ document.getElementById("filter-status").addEventListener("change", renderTables
   </script>
 </body>
 </html>
-
