@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -1332,59 +1332,34 @@
         });
 
         const form = document.getElementById("form-novo-registro");
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-  if (!currentAccess) {
-    alert("Perfil não carregado. Recarregue a página.");
-    return;
-  }
-
-  const formData = new FormData(form);
-
-  const officer_name = String(formData.get("officer_name") || "").trim();
-  const company = String(formData.get("company") || "");
-  const description = String(formData.get("description") || "").trim();
-
-  // agora estes NÃO vêm do formulário — vêm do usuário logado
-  const origin_role = currentAccess.funcao;   // PA / SUB / CMD / COORDOP
-  const last_updated_by = currentAccess.nome; // Nome do usuário
-
-  if (!officer_name || !company || !description) {
-    alert("Preencha todos os campos obrigatórios.");
-    return;
-  }
-
-  // trava companhia se não for COORDOP
-  if (currentAccess.funcao !== "COORDOP") {
-    const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
-    if (company !== must) {
-      alert("Companhia inválida para seu perfil.");
-      return;
-    }
-  }
-
-  const payload = {
-    officer_name,
-    company,
-    description,
-    origin_role,
-    last_updated_by,
-    current_stage: "PA",
-    status: "Pendente"
-  };
-
-  const ok = await createReport(payload);
-  if (!ok) return;
-
-  form.reset();
-  applyCompanyToForm();
-  await loadReports();
-});
-
+          if (!currentAccess) {
+            alert("Perfil não carregado. Recarregue a página.");
+            return;
           }
 
-          // trava companhia se não for coordop
+          const formData = new FormData(form);
+
+          const officer_name = String(formData.get("officer_name") || "").trim();
+          const company = String(formData.get("company") || "");
+          const type = String(formData.get("type") || "").trim();
+          const priority = String(formData.get("priority") || "").trim();
+          const source = String(formData.get("source") || "").trim();
+          const description = String(formData.get("description") || "").trim();
+          const internal_notes = String(formData.get("internal_notes") || "").trim();
+
+          // Agora estes NÃO vêm do formulário — vêm do usuário logado
+          const origin_role = currentAccess.funcao;     // PA / SUB / COMANDO / COORDOP
+          const last_updated_by = currentAccess.nome;   // nome exibido
+
+          if (!officer_name || !company || !type || !priority || !source || !description) {
+            alert("Preencha todos os campos obrigatórios.");
+            return;
+          }
+
+          // trava companhia se não for COORDOP
           if (currentAccess.funcao !== "COORDOP") {
             const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
             if (company !== must) {
@@ -1396,11 +1371,15 @@ form.addEventListener("submit", async (e) => {
           const payload = {
             officer_name,
             company,
-            origin_role,
+            type,
+            priority,
+            source,
             description,
+            internal_notes: internal_notes || null,
+            origin_role,
             current_stage: "PA",
             status: "Pendente",
-            last_updated_by: last_updated_by || origin_role
+            last_updated_by
           };
 
           const ok2 = await createReport(payload);
@@ -1411,7 +1390,7 @@ form.addEventListener("submit", async (e) => {
           await loadReports();
         });
 
-        document.getElementById("filter-status").addEventListener("change", renderTables);
+document.getElementById("filter-status").addEventListener("change", renderTables);
         document.getElementById("filter-company").addEventListener("change", renderTables);
         document.getElementById("filter-search").addEventListener("input", renderTables);
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
