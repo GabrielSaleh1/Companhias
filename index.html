@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0f16">
+<title>ROTA • Sistema de Companhias (ULTRA)</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Supabase -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter','ui-sans-serif','system-ui','Segoe UI','Roboto','Arial']
+      }
+    }
+  }
+}
+</script>
+
+<style>
+:root{
+  --bg0:#070a10; --bg1:#0b0f16;
+  --card:#0f172a; --stroke:rgba(148,163,184,.18);
+  --gold:#f59e0b; --gold2:#fbbf24;
+  --text:#e5e7eb;
+}
+html,body{
+  min-height:100%;
+  background:
+    radial-gradient(1200px 900px at 15% 10%, rgba(245,158,11,.10), transparent 55%),
+    radial-gradient(1100px 800px at 85% 20%, rgba(239,68,68,.07), transparent 58%),
+    radial-gradient(900px 700px at 70% 95%, rgba(16,185,129,.06), transparent 55%),
+    linear-gradient(180deg, var(--bg0), var(--bg1));
+  color:var(--text);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;
+  background-image:
+    linear-gradient(rgba(148,163,184,.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size:72px 72px;z-index:0;
+}
+#appRoot{position:relative;z-index:1}
+
+.glass{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+  border:1px solid var(--stroke);backdrop-filter:blur(12px);
+}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.2)),var(--card);
+  border:1px solid var(--stroke);
+}
+.table-grid td, .table-grid th{
+  border-bottom:1px dashed rgba(148,163,184,.22);
+  padding:.6rem .75rem;font-size:.9rem;
+}
+thead{background:rgba(245,158,11,.08);}
+.btn{padding:.45rem 1rem;border-radius:999px;font-weight:600;font-size:.85rem;}
+.btn-gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111827;}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);}
+.btn-outline{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.5);color:var(--gold);}
+</style>
+</head>
+
+<body>
+<div id="appRoot" class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+<header class="glass rounded-3xl p-6 flex justify-between items-center">
+  <div>
+    <h1 class="text-3xl font-extrabold">ROTA • Companhias</h1>
+    <p class="text-sm text-slate-400">Sistema Administrativo</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <span id="user-badge" class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs">
+      Carregando...
+    </span>
+    <button id="btn-logout" class="btn btn-outline">Sair</button>
+  </div>
+</header>
+
+<nav class="glass rounded-3xl p-3 flex flex-wrap gap-2">
+  <button data-view="view-dashboard" class="btn btn-gold">Dashboard</button>
+  <button data-view="view-registros" class="btn btn-ghost">Registros</button>
+  <button data-view="view-cia-alfa" class="btn btn-ghost">Caveiras</button>
+  <button data-view="view-cia-bravo" class="btn btn-ghost">Boinas Pretas</button>
+</nav>
+
+<section id="view-dashboard" class="card rounded-3xl p-6">
+  <h2 class="text-xl font-bold mb-4">Resumo</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass p-4 rounded-xl">Pendentes <div id="stat-pendente" class="text-2xl">0</div></div>
+    <div class="glass p-4 rounded-xl">Análise <div id="stat-analise" class="text-2xl">0</div></div>
+    <div class="glass p-4 rounded-xl">Resolvidos <div id="stat-resolvido" class="text-2xl">0</div></div>
+    <div class="glass p-4 rounded-xl">Arquivados <div id="stat-arquivado" class="text-2xl">0</div></div>
+  </div>
+</section>
+
+<section id="view-registros" class="hidden card rounded-3xl p-6">
+  <h2 class="text-xl font-bold mb-3">Registros</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full table-grid">
+      <thead><tr><th>Data</th><th>Policial</th><th>Cia</th><th>Status</th></tr></thead>
+      <tbody id="tbody-registros"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="view-cia-alfa" class="hidden card rounded-3xl p-6">
+  <h2 class="text-xl font-bold mb-3">Caveiras</h2>
+  <table class="w-full table-grid"><tbody id="tbody-cia-alfa"></tbody></table>
+</section>
+
+<section id="view-cia-bravo" class="hidden card rounded-3xl p-6">
+  <h2 class="text-xl font-bold mb-3">Boinas Pretas</h2>
+  <table class="w-full table-grid"><tbody id="tbody-cia-bravo"></tbody></table>
+</section>
+
+</div>
+
+<script>
+const SUPABASE_URL="https://ilonwkgtdszmpcjwlezc.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+
+const {createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const USER_ACCESS_MAP={
+ "7c8b8e53-1807-42e6-ae72-d855c285ad31":{nome:"Maj Coordop",funcao:"COORDOP",companhia:"TODAS"}
+};
+
+let currentAccess=null;
+let allReports=[];
+
+async function init(){
+  const {data}=await sb.auth.getUser();
+  if(!data?.user){location.href="login.html";return;}
+  currentAccess=USER_ACCESS_MAP[data.user.id];
+  if(!currentAccess){alert("Sem permissão.");return;}
+  document.getElementById("user-badge").innerText=currentAccess.nome;
+  loadReports();
+}
+
+async function loadReports(){
+  const {data}=await sb.from("rota_reports").select("*");
+  allReports=data||[];
+  render();
+}
+
+function render(){
+  const tb=id=>document.getElementById(id);
+  tb("tbody-registros").innerHTML="";
+  tb("tbody-cia-alfa").innerHTML="";
+  tb("tbody-cia-bravo").innerHTML="";
+
+  let p=0,a=0,r=0,ar=0;
+
+  allReports.forEach(x=>{
+    if(x.status==="Pendente")p++;
+    if(x.status==="Em análise")a++;
+    if(x.status==="Resolvido")r++;
+    if(x.status==="Arquivado")ar++;
+
+    const row=`<tr>
+      <td>${new Date(x.created_at).toLocaleString()}</td>
+      <td>${x.officer_name}</td>
+      <td>${x.company}</td>
+      <td>${x.status}</td>
+    </tr>`;
+
+    tb("tbody-registros").insertAdjacentHTML("beforeend",row);
+    if(x.company==="Caveiras") tb("tbody-cia-alfa").insertAdjacentHTML("beforeend",row);
+    if(x.company==="Boinas Pretas") tb("tbody-cia-bravo").insertAdjacentHTML("beforeend",row);
+  });
+
+  document.getElementById("stat-pendente").innerText=p;
+  document.getElementById("stat-analise").innerText=a;
+  document.getElementById("stat-resolvido").innerText=r;
+  document.getElementById("stat-arquivado").innerText=ar;
+}
+
+document.querySelectorAll("[data-view]").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll("section[id^='view']").forEach(s=>s.classList.add("hidden"));
+    document.getElementById(btn.dataset.view).classList.remove("hidden");
+  };
+});
+
+document.getElementById("btn-logout").onclick=async()=>{
+  await sb.auth.signOut();
+  location.href="login.html";
+};
+
+document.addEventListener("DOMContentLoaded",init);
+</script>
+
+</body>
+</html>
