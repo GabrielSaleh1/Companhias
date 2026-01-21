@@ -562,6 +562,86 @@
               <button class="btn sm" onclick="quickFilter({stage:'CMD'})">Etapa CMD</button>
             </span>
           </div>
+          <section id="view-solicitacoes" class="view">
+  <div class="section-title">
+    <span>Solicitações ao Major Coordop</span>
+  </div>
+
+  <div class="flex-row" style="gap:16px; align-items:flex-start; flex-wrap:wrap;">
+
+    <!-- FORMULÁRIO: COMANDO CRIA SOLICITAÇÃO -->
+    <div class="card" style="flex:1; min-width:320px;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Nova solicitação</div>
+          <div class="card-subtitle">Uso exclusivo dos Comandos de Companhia</div>
+        </div>
+      </div>
+
+      <form id="form-solicitacao-coordop">
+        <div class="field-group">
+          <div class="field-label">Título da solicitação</div>
+          <input class="input" name="title" required placeholder="Ex.: Pedido de reforço de efetivo" />
+        </div>
+
+        <div class="flex-row" style="gap:12px;">
+          <div class="field-group" style="flex:1;">
+            <div class="field-label">Companhia</div>
+            <input class="input" name="company" id="solicitacao-company" readonly />
+          </div>
+          <div class="field-group" style="min-width:180px;">
+            <div class="field-label">Prioridade</div>
+            <select class="select" name="priority" required>
+              <option>Baixa</option>
+              <option>Média</option>
+              <option>Alta</option>
+              <option>Crítica</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Descrição detalhada</div>
+          <textarea class="textarea" name="description" rows="4" required placeholder="Explique de forma clara o que está sendo solicitado ao Coordop."></textarea>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button type="submit" class="btn" id="btn-enviar-solicitacao">Enviar para o Coordop</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LISTA: VISÃO GERAL DAS SOLICITAÇÕES -->
+    <div class="card" style="flex:2; min-width:360px;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Solicitações registradas</div>
+          <div class="card-subtitle">Filtradas por companhia ou todas (para Coordop)</div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Companhia</th>
+              <th>Título</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Criado por</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-solicitacoes-coordop">
+            <tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
 
           <div class="flex-row">
             <!-- AQUI FOI O BUG: agora está 'card flex-1' -->
@@ -956,6 +1036,7 @@
 
     let allReports = [];
     let currentAccess = null;
+    let coordopRequests = [];
     let currentModalReportId = null;
     let filterOlderThanDays = null;
 
@@ -1408,7 +1489,48 @@
       }
       return true;
     }
+async function loadCoordopRequests() {
+  const { data, error } = await sb
+    .from("rota_coordop_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error(error);
+    alert("Erro ao carregar solicitações ao Coordop.");
+    return;
+  }
+
+  coordopRequests = data || [];
+  renderCoordopRequests();
+}
+
+async function createCoordopRequest(payload) {
+  const { error } = await sb
+    .from("rota_coordop_requests")
+    .insert(payload);
+
+  if (error) {
+    console.error(error);
+    alert("Erro ao criar solicitação ao Coordop.");
+    return false;
+  }
+  return true;
+}
+
+async function updateCoordopRequest(id, fields) {
+  const { error } = await sb
+    .from("rota_coordop_requests")
+    .update(fields)
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    alert("Erro ao atualizar solicitação ao Coordop.");
+    return false;
+  }
+  return true;
+}
     async function marcarEmAnalise(id) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("marcarEmAnalise", r)) return alert("Sem permissão.");
@@ -1484,6 +1606,79 @@
       await loadReports();
       showToast("Demanda escalada para o Praça Auxiliar.");
     }
+
+    function renderCoordopRequests() {
+  const tbody = document.getElementById("tbody-solicitacoes-coordop");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (!coordopRequests.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>`;
+    return;
+  }
+
+  const role = currentAccess?.funcao;
+  const ciaUser = currentAccess?.companhia;
+
+  let visible = coordopRequests.slice();
+
+  // Se não for Coordop, filtra pela companhia do usuário
+  if (role !== "COORDOP" && ciaUser) {
+    const ciaNorm = ciaUser.toUpperCase();
+    visible = visible.filter(r => (r.company || "").toUpperCase().includes(ciaNorm));
+  }
+
+  visible.forEach(r => {
+    const tr = document.createElement("tr");
+
+    const dt = new Date(r.created_at);
+    const dataFmt = dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+    const isCoordop = role === "COORDOP";
+
+    let actions = "";
+    if (isCoordop) {
+      actions += `<button class="btn xs" data-acao="analise" data-id="${r.id}">Em análise</button> `;
+      actions += `<button class="btn xs" data-acao="deferir" data-id="${r.id}">Deferir</button> `;
+      actions += `<button class="btn xs gray" data-acao="indeferir" data-id="${r.id}">Indeferir</button>`;
+    } else {
+      actions = `<span style="color:#9ca3af;font-size:11px;">Sem ações</span>`;
+    }
+
+    tr.innerHTML = `
+      <td>${dataFmt}</td>
+      <td>${r.company}</td>
+      <td>${r.title}</td>
+      <td>${r.priority}</td>
+      <td>${r.status}</td>
+      <td>${r.created_by}</td>
+      <td>${actions}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  // Listener para botões de ação do Coordop
+  tbody.querySelectorAll("button[data-acao]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const acao = btn.getAttribute("data-acao");
+      const id = btn.getAttribute("data-id");
+
+      if (acao === "analise") {
+        await updateCoordopRequest(id, { status: "Em análise" });
+      } else if (acao === "deferir") {
+        const resposta = prompt("Resposta do Coordop (opcional):") || null;
+        await updateCoordopRequest(id, { status: "Deferida", resposta_coordop: resposta });
+      } else if (acao === "indeferir") {
+        const resposta = prompt("Justificativa do indeferimento:") || null;
+        await updateCoordopRequest(id, { status: "Indeferida", resposta_coordop: resposta });
+      }
+
+      await loadCoordopRequests();
+    });
+  });
+}
 
     function openModal(r){
       currentModalReportId = r.id;
@@ -1922,6 +2117,16 @@
         setSidebarByAccess();
         applyCompanyToForm();
 
+        // Preenche companhia no formulário de solicitação ao Coordop
+const inputCiaSolic = document.getElementById("solicitacao-company");
+if (inputCiaSolic && currentAccess?.companhia) {
+  inputCiaSolic.value = currentAccess.companhia === "CAVEIRAS"
+    ? "Companhia Caveiras"
+    : currentAccess.companhia === "BOINAS_PRETAS"
+    ? "Companhia Boinas Pretas"
+    : currentAccess.companhia;
+}
+
         navBtns.forEach(btn => {
           btn.addEventListener("click", () => {
             if (btn.style.display === "none") return;
@@ -1955,6 +2160,64 @@
             alert("Perfil não carregado. Recarregue a página.");
             return;
           }
+// Formulário de solicitação ao Coordop (apenas para Comando)
+const formSolic = document.getElementById("form-solicitacao-coordop");
+if (formSolic) {
+  if (currentAccess.funcao !== "COMANDO" && currentAccess.funcao !== "COORDOP") {
+    // Bloqueia o uso do formulário pra quem não for Comando
+    formSolic.querySelectorAll("input, textarea, select, button").forEach(el => el.disabled = true);
+  }
+
+  formSolic.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!currentAccess) {
+      alert("Perfil não carregado. Recarregue a página.");
+      return;
+    }
+
+    if (currentAccess.funcao !== "COMANDO" && currentAccess.funcao !== "COORDOP") {
+      alert("Somente Comandos de Companhia podem enviar solicitações ao Coordop.");
+      return;
+    }
+
+    const fd = new FormData(formSolic);
+    const title = String(fd.get("title") || "").trim();
+    const description = String(fd.get("description") || "").trim();
+    const priority = String(fd.get("priority") || "").trim();
+    const company = String(fd.get("company") || "").trim() || "Não informado";
+
+    if (!title || !description || !priority) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    const payload = {
+      title,
+      description,
+      priority,
+      company,
+      status: "Aberta",
+      created_by: currentAccess.nome,
+      created_by_role: currentAccess.funcao
+    };
+
+    if (!(await createCoordopRequest(payload))) return;
+
+    formSolic.reset();
+    if (inputCiaSolic && currentAccess?.companhia) {
+      inputCiaSolic.value = currentAccess.companhia === "CAVEIRAS"
+        ? "Companhia Caveiras"
+        : currentAccess.companhia === "BOINAS_PRETAS"
+        ? "Companhia Boinas Pretas"
+        : currentAccess.companhia;
+    }
+    await loadCoordopRequests();
+  });
+}
+
+// Carrega as solicitações assim que logar
+await loadCoordopRequests();
 
           const formData = new FormData(form);
 
