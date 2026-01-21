@@ -340,7 +340,7 @@
         </div>
         <div style="text-align:right;">
           <button class="btn sm ghost" onclick="closeModal()">Fechar</button>
-          <div id="modal-actions" style="margin-top:8px;"></div>
+          <div id="modal-actions" style="margin-top:8px;font-size:11px;"></div>
         </div>
       </div>
       <div class="modal-body">
@@ -436,6 +436,7 @@
           <button class="btn sm" id="btn-logout" style="margin-top:8px;">Sair</button>
           <br />
           <span class="tag-pill"><strong>Modo</strong> Gestão interna</span>
+          <div id="alert-badge" style="margin-top:6px;font-size:11px;"></div>
         </div>
       </header>
 
@@ -477,7 +478,7 @@
                   <div class="card-title">Resolvidas</div>
                   <div class="card-subtitle">Encerradas (decisão aplicada)</div>
                 </div>
-                <span class="badge green">OK</span>
+                <span class="badge.green">OK</span>
               </div>
               <div class="stat-number" id="stat-resolvido">0</div>
               <div class="stat-label">Inclui ações internas e decisões.</div>
@@ -519,7 +520,32 @@
               <div id="dash-aging" style="font-size:12px;line-height:1.55;"></div>
             </div>
           </div>
+
+          <div class="grid" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Reincidência de policiais</div>
+                  <div class="card-subtitle">Top policiais sob observação</div>
+                </div>
+                <span class="badge.red">Reincidência</span>
+              </div>
+              <div id="dash-reincidencia" style="font-size:12px;line-height:1.55;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Elogios & destaques</div>
+                  <div class="card-subtitle">Reconhecimento positivo</div>
+                </div>
+                <span class="badge.green">Moral da tropa</span>
+              </div>
+              <div id="dash-elogios" style="font-size:12px;line-height:1.55;"></div>
+            </div>
+          </div>
         </section>
+
         <section id="view-registros" class="view">
           <div class="section-title">
             <span>Demandas internas</span>
@@ -532,7 +558,7 @@
           </div>
 
           <div class="flex-row">
-            <div class="card flex-1">
+            <div class="card.flex-1">
               <div class="card-header">
                 <div>
                   <div class="card-title">Nova demanda</div>
@@ -703,7 +729,7 @@
             </table>
           </div>
           <div style="margin-top:10px;color:var(--text-muted);font-size:11px;">
-            Dica: clique em uma linha para abrir o <strong>detalhe + linha do tempo</strong>.
+            Dica: clique em uma linha para abrir o <strong>detalhe + ficha do policial + linha do tempo</strong>.
           </div>
         </section>
 
@@ -718,7 +744,7 @@
               <div class="card-header">
                 <div>
                   <div class="card-title">Comparativo por Companhia</div>
-                  <div class="card-subtitle">Volume e pendências</div>
+                  <div class="card-subtitle">Volume, pendências e críticas</div>
                 </div>
               </div>
               <div id="rel-compare" style="font-size:12px;line-height:1.6;"></div>
@@ -728,7 +754,7 @@
               <div class="card-header">
                 <div>
                   <div class="card-title">SLA (tempo médio visível)</div>
-                  <div class="card-subtitle">Estimativa por tempo desde criação</div>
+                  <div class="card-subtitle">Por etapa: PA / SUB / CMD</div>
                 </div>
               </div>
               <div id="rel-sla" style="font-size:12px;line-height:1.6;"></div>
@@ -754,6 +780,28 @@
                 </div>
               </div>
               <div id="rel-old" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Horários críticos</div>
+                  <div class="card-subtitle">Distribuição por faixa de horário</div>
+                </div>
+              </div>
+              <div id="rel-horarios" style="font-size:12px;line-height:1.6;"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Clima por Companhia</div>
+                  <div class="card-subtitle">Índice 0–10 (conflitos x elogios)</div>
+                </div>
+              </div>
+              <div id="rel-clima" style="font-size:12px;line-height:1.6;"></div>
             </div>
           </div>
         </section>
@@ -901,6 +949,20 @@
 
     let allReports = [];
     let currentAccess = null; // { nome, funcao, companhia }
+    let currentModalReportId = null;
+    let filterOlderThanDays = null;
+
+    // ====== HELPERS VISUAIS ======
+    function showToast(message){
+      const toast = document.getElementById("toast");
+      if(!toast) return;
+      toast.textContent = message;
+      toast.style.display = "block";
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+      }, 3500);
+    }
 
     // ====== COMPANHIA (compatível com registros antigos Alfa/Bravo) ======
     function normalizeCompany(raw) {
@@ -927,12 +989,29 @@
       return `${day}/${month}/${year} ${hours}:${minutes}`;
     }
 
+    function diffInDays(fromIso, toDate = new Date()){
+      if(!fromIso) return 0;
+      const d = new Date(fromIso);
+      const diffMs = toDate - d;
+      return diffMs / (1000 * 60 * 60 * 24);
+    }
+
     function statusClass(status) {
       if (status === "Pendente") return "pendente";
       if (status === "Em análise") return "analise";
       if (status === "Resolvido") return "resolvido";
       if (status === "Arquivado") return "arquivado";
       return "pendente";
+    }
+
+    function getHourSlot(dateIso){
+      if(!dateIso) return "Sem horário";
+      const d = new Date(dateIso);
+      const h = d.getHours();
+      if (h < 6) return "Madrugada (00–05h)";
+      if (h < 12) return "Manhã (06–11h)";
+      if (h < 18) return "Tarde (12–17h)";
+      return "Noite (18–23h)";
     }
 
     // ====== AUTH + PERFIL ======
@@ -966,6 +1045,11 @@
           await sb.auth.signOut();
           window.location.href = "login.html";
         });
+      }
+
+      const badgeReg = document.getElementById("badge-registrado-por");
+      if (badgeReg) {
+        badgeReg.textContent = `Registrado por: ${access.nome}`;
       }
 
       return true;
@@ -1060,9 +1144,9 @@
 
     function actionButtonsForMainTable(r) {
       const btns = [];
-      if (currentAccess?.funcao === "COORDOP") btns.push(`<button class="btn sm" onclick="escalarPA('${r.id}')">Escalar</button>`);
-      if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-      if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
+      if (currentAccess?.funcao === "COORDOP") btns.push(`<button class="btn sm" onclick="escalarPA('${r.id}');event.stopPropagation();">Escalar</button>`);
+      if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}');event.stopPropagation();">Resolver</button>`);
+      if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}');event.stopPropagation();">Arquivar</button>`);
       return btns.length ? btns.join(" ") : `<span style="color:#9ca3af;">-</span>`;
     }
 
@@ -1085,17 +1169,28 @@
       const companyFilterRaw = document.getElementById("filter-company")?.value || "todas";
       const companyFilter = (companyFilterRaw === "todas") ? "todas" : normalizeCompany(companyFilterRaw);
       const searchFilter = (document.getElementById("filter-search")?.value || "").toLowerCase();
+      const stageFilter = document.getElementById("filter-stage")?.value || "todas";
+      const priorityFilter = document.getElementById("filter-priority")?.value || "todas";
+      const typeFilter = document.getElementById("filter-type")?.value || "todos";
 
       const visible = allReports.filter(filterByAccess);
+      const now = new Date();
 
       const filtered = visible.filter(r => {
         if (statusFilter !== "todos" && r.status !== statusFilter) return false;
-
         const rc = normalizeCompany(r.company);
         if (companyFilter !== "todas" && rc !== companyFilter) return false;
+        if (stageFilter !== "todas" && r.current_stage !== stageFilter) return false;
+        if (priorityFilter !== "todas" && r.priority !== priorityFilter) return false;
+        if (typeFilter !== "todos" && r.type !== typeFilter) return false;
+
+        if (filterOlderThanDays != null){
+          const diff = diffInDays(r.created_at, now);
+          if (diff < filterOlderThanDays) return false;
+        }
 
         if (searchFilter) {
-          const txt = `${r.officer_name} ${r.description}`.toLowerCase();
+          const txt = `${r.officer_name} ${r.description || ""} ${r.internal_notes || ""}`.toLowerCase();
           if (!txt.includes(searchFilter)) return false;
         }
         return true;
@@ -1119,7 +1214,7 @@
         tbodyReg.appendChild(tr);
       });
 
-            // Caveiras
+      // Caveiras
       visible.filter(r => normalizeCompany(r.company) === "CAVEIRAS").forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -1157,8 +1252,8 @@
         .forEach(r => {
           const tr = document.createElement("tr");
           const btns = [];
-          if (canAction("marcarEmAnalise", r)) btns.push(`<button class="btn sm" onclick="marcarEmAnalise('${r.id}')">Em análise</button>`);
-          if (canAction("escalarParaSub", r)) btns.push(`<button class="btn sm" onclick="escalarParaSub('${r.id}')">Escalar p/ Sub</button>`);
+          if (canAction("marcarEmAnalise", r)) btns.push(`<button class="btn sm" onclick="marcarEmAnalise('${r.id}');event.stopPropagation();">Em análise</button>`);
+          if (canAction("escalarParaSub", r)) btns.push(`<button class="btn sm" onclick="escalarParaSub('${r.id}');event.stopPropagation();">Escalar p/ Sub</button>`);
           tr.innerHTML = `
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
@@ -1179,8 +1274,8 @@
         .forEach(r => {
           const tr = document.createElement("tr");
           const btns = [];
-          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-          if (canAction("escalarParaCmd", r)) btns.push(`<button class="btn sm" onclick="escalarParaCmd('${r.id}')">Escalar p/ Cmd</button>`);
+          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}');event.stopPropagation();">Resolver</button>`);
+          if (canAction("escalarParaCmd", r)) btns.push(`<button class="btn sm" onclick="escalarParaCmd('${r.id}');event.stopPropagation();">Escalar p/ Cmd</button>`);
           tr.innerHTML = `
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
@@ -1201,8 +1296,8 @@
         .forEach(r => {
           const tr = document.createElement("tr");
           const btns = [];
-          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}')">Resolver</button>`);
-          if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}')">Arquivar</button>`);
+          if (canAction("resolver", r)) btns.push(`<button class="btn sm" onclick="resolver('${r.id}');event.stopPropagation();">Resolver</button>`);
+          if (canAction("arquivar", r)) btns.push(`<button class="btn sm danger" onclick="arquivar('${r.id}');event.stopPropagation();">Arquivar</button>`);
           tr.innerHTML = `
             <td>${formatDate(r.created_at)}</td>
             <td>${r.officer_name}</td>
@@ -1218,6 +1313,7 @@
         });
 
       updateDashboardStats(visible);
+      computeMetrics(); // atualiza dashboards/relatórios
     }
 
     async function loadReports() {
@@ -1243,6 +1339,7 @@
         alert("Erro ao criar registro.");
         return false;
       }
+      showToast("Demanda registrada com sucesso.");
       return true;
     }
 
@@ -1260,37 +1357,64 @@
     async function marcarEmAnalise(id) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("marcarEmAnalise", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { status: "Em análise" }))) return;
+      if (!(await updateReport(id, { status: "Em análise", last_updated_by: currentAccess?.nome || null }))) return;
       await loadReports();
+      showToast("Demanda marcada como 'Em análise'.");
     }
 
     async function escalarParaSub(id) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("escalarParaSub", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { current_stage: "SUB", status: "Em análise", escalated_to: "Subcomando" }))) return;
+      if (!(await updateReport(id, { current_stage: "SUB", status: "Em análise", escalated_to: "Subcomando", last_updated_by: currentAccess?.nome || null }))) return;
       await loadReports();
+      showToast("Demanda escalada para o Subcomando.");
     }
 
     async function escalarParaCmd(id) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("escalarParaCmd", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { current_stage: "CMD", status: "Em análise", escalated_to: "Comandante" }))) return;
+      if (!(await updateReport(id, { current_stage: "CMD", status: "Em análise", escalated_to: "Comandante", last_updated_by: currentAccess?.nome || null }))) return;
       await loadReports();
+      showToast("Demanda escalada para o Comandante.");
     }
 
-    async function resolver(id) {
+    async function resolver(id, decisionPayload) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("resolver", r)) return alert("Sem permissão.");
-      if (!(await updateReport(id, { status: "Resolvido" }))) return;
+      const fields = { status: "Resolvido" };
+      if (decisionPayload) {
+        fields.decision_type = decisionPayload.decision_type || null;
+        fields.decision_details = decisionPayload.decision_details || null;
+        fields.decision_by = decisionPayload.decision_by || null;
+        fields.decision_at = decisionPayload.decision_at || null;
+        fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
+      } else {
+        fields.last_updated_by = currentAccess?.nome || null;
+      }
+      if (!(await updateReport(id, fields))) return;
       await loadReports();
+      showToast("Demanda marcada como 'Resolvida'.");
+      closeModal();
     }
 
-    async function arquivar(id) {
+    async function arquivar(id, decisionPayload) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("arquivar", r)) return alert("Sem permissão.");
       if (!confirm("Arquivar este registro?")) return;
-      if (!(await updateReport(id, { status: "Arquivado" }))) return;
+      const fields = { status: "Arquivado" };
+      if (decisionPayload) {
+        fields.decision_type = decisionPayload.decision_type || null;
+        fields.decision_details = decisionPayload.decision_details || null;
+        fields.decision_by = decisionPayload.decision_by || null;
+        fields.decision_at = decisionPayload.decision_at || null;
+        fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
+      } else {
+        fields.last_updated_by = currentAccess?.nome || null;
+      }
+      if (!(await updateReport(id, fields))) return;
       await loadReports();
+      showToast("Demanda arquivada.");
+      closeModal();
     }
 
     async function escalarPA(id) {
@@ -1301,42 +1425,453 @@
         alert("Já está sob responsabilidade do Praça Auxiliar.");
         return;
       }
-      if (!(await updateReport(id, { current_stage: "PA", status: "Em análise", escalated_to: "Praça Auxiliar" }))) return;
+      if (!(await updateReport(id, { current_stage: "PA", status: "Em análise", escalated_to: "Praça Auxiliar", last_updated_by: currentAccess?.nome || null }))) return;
       await loadReports();
+      showToast("Demanda escalada para o Praça Auxiliar.");
     }
 
-    
+    // ====== MODAL / FICHA DO POLICIAL / DECISÃO ======
     function openModal(r){
+      currentModalReportId = r.id;
+
       document.getElementById("modal-title").textContent = `Demanda — ${r.officer_name}`;
       document.getElementById("modal-sub").textContent =
         `${companyLabel(normalizeCompany(r.company))} • ${r.type} • ${r.priority}`;
+
+      // Perfil do policial
+      const sameOfficer = allReports.filter(x => x.officer_name === r.officer_name);
+      const total = sameOfficer.length;
+      const pend = sameOfficer.filter(x => x.status === "Pendente").length;
+      const emAnalise = sameOfficer.filter(x => x.status === "Em análise").length;
+      const resolv = sameOfficer.filter(x => x.status === "Resolvido").length;
+      const arquiv = sameOfficer.filter(x => x.status === "Arquivado").length;
+      const elogios = sameOfficer.filter(x => x.type === "Elogio / Destaque").length;
+
+      const disciplina = sameOfficer.filter(x => x.type === "Disciplina / Conduta").length;
+      const assid = sameOfficer.filter(x => x.type === "Assiduidade / Pontualidade").length;
+      const conflito = sameOfficer.filter(x => x.type === "Conflito interno").length;
+
+      let perfilHtml = `
+        <strong>Ficha resumida do policial</strong><br/>
+        • Total de demandas: <strong>${total}</strong> (Pendentes: ${pend}, Em análise: ${emAnalise}, Resolvidas: ${resolv}, Arquivadas: ${arquiv})<br/>
+        • Elogios / Destaques: <strong>${elogios}</strong><br/>
+        • Principais tipos: Disciplina/Conduta ${disciplina} | Assiduidade ${assid} | Conflitos ${conflito}
+      `;
+
       document.getElementById("modal-summary").innerHTML = `
         <strong>Status:</strong> ${r.status}<br/>
         <strong>Etapa:</strong> ${r.current_stage}<br/>
-        <strong>Descrição:</strong><br/>${r.description}
+        <strong>Prioridade:</strong> ${r.priority || '-'}<br/>
+        <strong>Origem:</strong> ${r.source || '-'}<br/>
+        <strong>Descrição:</strong><br/>${r.description}<br/><br/>
+        ${perfilHtml}
       `;
-      document.getElementById("modal-timeline").innerHTML = `
+
+      let timelineHtml = `
         <div>📌 Criado em ${formatDate(r.created_at)}</div>
         ${r.escalated_to ? `<div>➡️ Escalado para ${r.escalated_to}</div>` : ``}
-        ${r.last_updated_by ? `<div>✍️ Última ação: ${r.last_updated_by}</div>` : ``}
+        ${r.last_updated_by ? `<div>✍️ Última ação por: ${r.last_updated_by}</div>` : ``}
       `;
+
+      // Integração lógica com RSO / Ponto
+      if (r.source && String(r.source).includes("RSO")) {
+        timelineHtml += `<div>📄 Origem: relato em patrulha (RSO). Verifique o RSO desse dia para mais detalhes.</div>`;
+      }
+      if (r.source && String(r.source).includes("Ponto")) {
+        timelineHtml += `<div>🕒 Origem: via Ponto Online. Verifique o histórico de ponto do policial nessa data.</div>`;
+      }
+      if (r.rso_link) {
+        timelineHtml += `<div>🔗 RSO vinculado: <a href="${r.rso_link}" target="_blank" style="color:var(--info);text-decoration:underline;">Abrir registro</a></div>`;
+      }
+
+      if (r.decision_type || r.decision_by) {
+        timelineHtml += `<div>✅ Decisão registrada: <strong>${r.decision_type || '—'}</strong> por ${r.decision_by || '—'} em ${r.decision_at ? formatDate(r.decision_at) : '-'}</div>`;
+        if (r.decision_details) {
+          timelineHtml += `<div style="margin-top:4px;"><em>${r.decision_details}</em></div>`;
+        }
+      }
+
+      document.getElementById("modal-timeline").innerHTML = timelineHtml;
+
+      // Notas internas
+      document.getElementById("modal-notes").value = r.internal_notes || "";
+
+      // Ações / decisão do comando
+      let actionsHtml = "";
+      if (currentAccess) {
+        if (canAction("resolver", r) || canAction("arquivar", r)) {
+          actionsHtml += `
+            <div style="margin-bottom:4px;">Registro de decisão</div>
+            <select id="modal-decision-type" class="select" style="margin-bottom:4px;min-width:220px;">
+              <option value="">Tipo de decisão...</option>
+              <option value="Advertência verbal">Advertência verbal</option>
+              <option value="Advertência escrita">Advertência escrita</option>
+              <option value="Treinamento obrigatório">Treinamento obrigatório</option>
+              <option value="Punição interna">Punição interna</option>
+              <option value="Arquivamento sem punição">Arquivamento sem punição</option>
+              <option value="Encaminhamento ao Maj Coordop">Encaminhamento ao Maj Coordop</option>
+            </select>
+            <textarea id="modal-decision-details" class="textarea" placeholder="Descreva a decisão: fundamentos, orientações, desdobramentos..." style="margin-bottom:6px;min-width:240px;"></textarea>
+            <div>
+              ${canAction("resolver", r) ? `<button class="btn sm" onclick="salvarDecisao('resolver')">Salvar decisão & Resolver</button>` : ``}
+              ${canAction("arquivar", r) ? `<button class="btn sm danger" onclick="salvarDecisao('arquivar')">Salvar decisão & Arquivar</button>` : ``}
+            </div>
+          `;
+        } else {
+          actionsHtml += `<div style="color:var(--text-muted);">Sem ações diretas disponíveis para seu perfil nesta etapa.</div>`;
+        }
+      }
+      document.getElementById("modal-actions").innerHTML = actionsHtml;
+
       document.getElementById("modal-backdrop").style.display = "flex";
     }
 
     function closeModal(){
       document.getElementById("modal-backdrop").style.display = "none";
+      currentModalReportId = null;
+    }
+
+    async function saveInternalNotes(){
+      if (!currentModalReportId) {
+        alert("Nenhuma demanda selecionada.");
+        return;
+      }
+      const notes = document.getElementById("modal-notes").value;
+      const fields = {
+        internal_notes: notes || null,
+        last_updated_by: currentAccess?.nome || null
+      };
+      if (!(await updateReport(currentModalReportId, fields))) return;
+      await loadReports();
+      showToast("Observações internas atualizadas.");
+    }
+
+    function salvarDecisao(acao){
+      if (!currentModalReportId) {
+        alert("Nenhuma demanda selecionada.");
+        return;
+      }
+      const typeEl = document.getElementById("modal-decision-type");
+      const detailsEl = document.getElementById("modal-decision-details");
+      const decision_type = typeEl ? String(typeEl.value || "") : "";
+      const decision_details = detailsEl ? String(detailsEl.value || "").trim() : "";
+
+      if (!decision_type){
+        alert("Selecione um tipo de decisão.");
+        return;
+      }
+
+      const payload = {
+        decision_type,
+        decision_details: decision_details || null,
+        decision_by: currentAccess?.nome || null,
+        decision_at: new Date().toISOString(),
+        last_updated_by: currentAccess?.nome || null
+      };
+
+      if (acao === "resolver") {
+        resolver(currentModalReportId, payload);
+      } else if (acao === "arquivar") {
+        arquivar(currentModalReportId, payload);
+      }
     }
 
     window.openModal = openModal;
     window.closeModal = closeModal;
-
-    // Expor globalmente
     window.marcarEmAnalise = marcarEmAnalise;
     window.escalarParaSub = escalarParaSub;
     window.escalarParaCmd = escalarParaCmd;
     window.resolver = resolver;
     window.arquivar = arquivar;
     window.escalarPA = escalarPA;
+    window.saveInternalNotes = saveInternalNotes;
+    window.salvarDecisao = salvarDecisao;
+
+    // ====== QUICK FILTER ======
+    function quickFilter(criteria){
+      if (criteria.status){
+        const el = document.getElementById("filter-status");
+        if (el) el.value = criteria.status;
+      }
+      if (criteria.priority){
+        const el = document.getElementById("filter-priority");
+        if (el) el.value = criteria.priority;
+      }
+      if (criteria.stage){
+        const el = document.getElementById("filter-stage");
+        if (el) el.value = criteria.stage;
+      }
+      if (criteria.olderThanDays != null){
+        filterOlderThanDays = criteria.olderThanDays;
+      } else {
+        filterOlderThanDays = null;
+      }
+      renderTables();
+    }
+    window.quickFilter = quickFilter;
+
+    // ====== MÉTRICAS AVANÇADAS (reincidência, horários, SLA por etapa, clima, etc.) ======
+    function computeMetrics(){
+      const visible = allReports.filter(filterByAccess);
+      const now = new Date();
+
+      // --- SLA Geral + por etapa ---
+      let totalAbertos = 0;
+      let somaDias = 0;
+
+      const stages = ["PA","SUB","CMD"];
+      const slaPorStage = {
+        PA: { total:0, somaDias:0 },
+        SUB:{ total:0, somaDias:0 },
+        CMD:{ total:0, somaDias:0 }
+      };
+
+      visible.forEach(r => {
+        if (r.status !== "Arquivado"){
+          const dias = diffInDays(r.created_at, now);
+          totalAbertos++;
+          somaDias += dias;
+          if (slaPorStage[r.current_stage]) {
+            slaPorStage[r.current_stage].total++;
+            slaPorStage[r.current_stage].somaDias += dias;
+          }
+        }
+      });
+
+      const slaMedio = totalAbertos ? (somaDias / totalAbertos) : 0;
+      const badgeSla = document.getElementById("badge-sla");
+      if (badgeSla){
+        badgeSla.textContent = `SLA médio: ${slaMedio.toFixed(1)} dia(s) visíveis`;
+      }
+
+      const relSla = document.getElementById("rel-sla");
+      if (relSla){
+        const linhas = stages.map(st => {
+          const info = slaPorStage[st];
+          if (!info.total) return `• ${st}: sem casos em aberto.`;
+          const m = info.somaDias / info.total;
+          return `• ${st}: ${info.total} caso(s) abertos, média de ${m.toFixed(1)} dia(s).`;
+        });
+        relSla.innerHTML = `
+          <p>Considerando apenas demandas ainda não arquivadas:</p>
+          <p>${linhas.join("<br/>")}</p>
+        `;
+      }
+
+      // --- Tipos (dash-types + rel-types) ---
+      const tiposCount = {};
+      const tiposPorCia = {
+        CAVEIRAS:{},
+        BOINAS_PRETAS:{}
+      };
+
+      visible.forEach(r => {
+        const t = r.type || "Sem tipo";
+        tiposCount[t] = (tiposCount[t] || 0) + 1;
+        const cia = normalizeCompany(r.company);
+        if (!tiposPorCia[cia]) tiposPorCia[cia] = {};
+        tiposPorCia[cia][t] = (tiposPorCia[cia][t] || 0) + 1;
+      });
+
+      const dashTypes = document.getElementById("dash-types");
+      if (dashTypes){
+        const ordenado = Object.entries(tiposCount)
+          .sort((a,b) => b[1] - a[1])
+          .slice(0,5)
+          .map(([tipo,qtd]) => `• <strong>${tipo}</strong>: ${qtd} demanda(s)`);
+        dashTypes.innerHTML = ordenado.length
+          ? ordenado.join("<br/>")
+          : "Sem dados suficientes ainda.";
+      }
+
+      const relTypes = document.getElementById("rel-types");
+      if (relTypes){
+        let html = "";
+        ["CAVEIRAS","BOINAS_PRETAS"].forEach(cia => {
+          const mapa = tiposPorCia[cia] || {};
+          const total = Object.values(mapa).reduce((s,v)=>s+v,0);
+          html += `<strong>${companyLabel(cia)}</strong> — ${total || 0} registro(s)<br/>`;
+          const entries = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+          entries.forEach(([tipo,qtd]) => {
+            html += `• ${tipo}: ${qtd}<br/>`;
+          });
+          html += `<br/>`;
+        });
+        relTypes.innerHTML = html || "Sem dados para as companhias visíveis.";
+      }
+
+      // --- Aging / pendências antigas (dash-aging + rel-old) ---
+      const pendentes = visible.filter(r => r.status !== "Resolvido" && r.status !== "Arquivado");
+      const ordenadoAntigo = [...pendentes].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+      const dashAging = document.getElementById("dash-aging");
+      if (dashAging) {
+        const top = ordenadoAntigo.slice(0,5).map(r => {
+          const dias = diffInDays(r.created_at, now).toFixed(1);
+          return `• ${r.officer_name} (${companyLabel(normalizeCompany(r.company))}) — ${dias} dia(s), ${r.status}, etapa ${r.current_stage}`;
+        });
+        dashAging.innerHTML = top.length ? top.join("<br/>") : "Nenhuma pendência antiga crítica.";
+      }
+
+      const relOld = document.getElementById("rel-old");
+      if (relOld){
+        const top10 = ordenadoAntigo.slice(0,10).map(r => {
+          const dias = diffInDays(r.created_at, now).toFixed(1);
+          return `• ${formatDate(r.created_at)} — ${r.officer_name} (${companyLabel(normalizeCompany(r.company))}) — ${dias} dia(s) em ${r.status} / ${r.current_stage}`;
+        });
+        relOld.innerHTML = top10.length ? top10.join("<br/>") : "Sem pendências antigas no momento.";
+      }
+
+      // --- Reincidência de policiais ---
+      const porPolicial = {};
+      visible.forEach(r => {
+        if (!porPolicial[r.officer_name]) {
+          porPolicial[r.officer_name] = { total:0, conflitos:0, disciplina:0, elogios:0 };
+        }
+        const obj = porPolicial[r.officer_name];
+        obj.total++;
+        if (r.type === "Conflito interno") obj.conflitos++;
+        if (r.type === "Disciplina / Conduta") obj.disciplina++;
+        if (r.type === "Elogio / Destaque") obj.elogios++;
+      });
+
+      const reincList = Object.entries(porPolicial)
+        .sort((a,b)=>b[1].total - a[1].total)
+        .slice(0,5);
+
+      const dashReinc = document.getElementById("dash-reincidencia");
+      if (dashReinc){
+        if (!reincList.length){
+          dashReinc.innerHTML = "Ainda não há reincidência relevante.";
+        } else {
+          dashReinc.innerHTML = reincList.map(([nome,info]) => {
+            const flag = info.total >= 3 ? " ⛔" : "";
+            return `• <strong>${nome}</strong>: ${info.total} demanda(s) (Disciplina: ${info.disciplina}, Conflitos: ${info.conflitos}, Elogios: ${info.elogios})${flag}`;
+          }).join("<br/>");
+        }
+      }
+
+      // --- Elogios & Destaques ---
+      const elogiosTodos = visible.filter(r => r.type === "Elogio / Destaque");
+      const elogiosPorPolicial = {};
+      elogiosTodos.forEach(r => {
+        elogiosPorPolicial[r.officer_name] = (elogiosPorPolicial[r.officer_name] || 0) + 1;
+      });
+
+      const rankingElogios = Object.entries(elogiosPorPolicial)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,5);
+
+      const dashElogios = document.getElementById("dash-elogios");
+      if (dashElogios){
+        let html = "";
+        if (!rankingElogios.length){
+          html = "Ainda não há elogios registrados.";
+        } else {
+          html += "<strong>Ranking de elogios:</strong><br/>";
+          html += rankingElogios.map(([nome,qtd]) => `• ${nome}: ${qtd} elogio(s)`).join("<br/>");
+          const ultimos = elogiosTodos.slice(0,3).map(r =>
+            `• ${formatDate(r.created_at)} — ${r.officer_name}: ${r.description.slice(0,120)}${r.description.length>120 ? "..." : ""}`
+          );
+          if (ultimos.length){
+            html += "<br/><br/><strong>Últimos elogios:</strong><br/>" + ultimos.join("<br/>");
+          }
+        }
+        dashElogios.innerHTML = html;
+      }
+
+      // --- Comparativo por companhia + eficiência ---
+      const relCompare = document.getElementById("rel-compare");
+      if (relCompare){
+        let html = "";
+        ["CAVEIRAS","BOINAS_PRETAS"].forEach(cia => {
+          const daCia = visible.filter(r => normalizeCompany(r.company) === cia);
+          const total = daCia.length;
+          const pend = daCia.filter(r => r.status === "Pendente").length;
+          const emA = daCia.filter(r => r.status === "Em análise").length;
+          const res = daCia.filter(r => r.status === "Resolvido").length;
+          const arq = daCia.filter(r => r.status === "Arquivado").length;
+          const criticas = daCia.filter(r => r.priority === "Crítica").length;
+
+          // Eficiência simples: % resolvido/total
+          const eficiencia = total ? (res / total) * 10 : 0;
+
+          html += `<strong>${companyLabel(cia)}</strong><br/>`;
+          html += `• Total: ${total} (Pendentes: ${pend}, Em análise: ${emA}, Resolvidas: ${res}, Arquivadas: ${arq})<br/>`;
+          html += `• Críticas: ${criticas}<br/>`;
+          html += `• Indicador de eficiência (resolvidas): ${eficiencia.toFixed(1)}/10<br/><br/>`;
+        });
+        relCompare.innerHTML = html || "Sem dados para comparação.";
+      }
+
+      // --- Horários críticos ---
+      const relHorarios = document.getElementById("rel-horarios");
+      if (relHorarios){
+        const mapa = {};
+        visible.forEach(r => {
+          const slot = getHourSlot(r.created_at);
+          mapa[slot] = (mapa[slot] || 0) + 1;
+        });
+        const entries = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+        if (!entries.length){
+          relHorarios.innerHTML = "Nenhuma demanda visível para calcular horários.";
+        } else {
+          relHorarios.innerHTML = entries.map(([slot,qtd]) => `• ${slot}: ${qtd} demanda(s)`).join("<br/>");
+        }
+      }
+
+      // --- Clima por companhia ---
+      const relClima = document.getElementById("rel-clima");
+      if (relClima){
+        let html = "";
+        ["CAVEIRAS","BOINAS_PRETAS"].forEach(cia => {
+          const daCia = visible.filter(r => normalizeCompany(r.company) === cia);
+          if (!daCia.length){
+            html += `<strong>${companyLabel(cia)}</strong>: sem dados suficientes.<br/><br/>`;
+            return;
+          }
+          let score = 10;
+          let confl = 0, disc = 0, assid = 0, elog = 0;
+          daCia.forEach(r => {
+            if (r.type === "Conflito interno"){ score -= 1.5; confl++; }
+            if (r.type === "Disciplina / Conduta"){ score -= 1.2; disc++; }
+            if (r.type === "Assiduidade / Pontualidade"){ score -= 0.8; assid++; }
+            if (r.type === "Elogio / Destaque"){ score += 0.7; elog++; }
+          });
+          if (score < 0) score = 0;
+          if (score > 10) score = 10;
+
+          let leitura = "Neutro";
+          if (score >= 8) leitura = "Saudável";
+          else if (score >= 6) leitura = "Moderado";
+          else if (score >= 4) leitura = "Preocupante";
+          else leitura = "Crítico";
+
+          html += `<strong>${companyLabel(cia)}</strong> — Índice: <strong>${score.toFixed(1)}/10</strong> (${leitura})<br/>`;
+          html += `• Conflitos: ${confl} | Disciplina: ${disc} | Assiduidade: ${assid} | Elogios: ${elog}<br/><br/>`;
+        });
+        relClima.innerHTML = html;
+      }
+
+      // --- Alertas no topo (badge) ---
+      const alertBadge = document.getElementById("alert-badge");
+      if (alertBadge){
+        const critPend = visible.filter(r => r.priority === "Crítica" && (r.status === "Pendente" || r.status === "Em análise"));
+        const muitoAntigas = pendentes.filter(r => diffInDays(r.created_at, now) >= 7);
+        if (!critPend.length && !muitoAntigas.length){
+          alertBadge.innerHTML = `<span style="color:var(--success);">Nenhum alerta crítico no momento.</span>`;
+        } else {
+          let txt = "";
+          if (critPend.length){
+            txt += `🔴 ${critPend.length} demanda(s) críticas em aberto. `;
+          }
+          if (muitoAntigas.length){
+            txt += `🟠 ${muitoAntigas.length} pendência(s) com 7+ dias.`;
+          }
+          alertBadge.textContent = txt;
+        }
+      }
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
       (async () => {
@@ -1364,6 +1899,7 @@
             const labels = {
               "view-dashboard": "Visão Geral",
               "view-registros": "Registros",
+              "view-relatorios": "Relatórios",
               "view-cia-alfa": "Companhia Caveiras",
               "view-cia-bravo": "Companhia Boinas Pretas",
               "view-pa": "Praça Auxiliar",
@@ -1388,28 +1924,24 @@
           const officer_name = String(formData.get("officer_name") || "").trim();
           const companySelectEl = document.getElementById("company-select");
           let company = String(formData.get("company") || "");
-          // IMPORTANTE: se o select estiver "disabled", ele NÃO entra no FormData.
-          // Então pegamos direto do elemento (ou do perfil logado como fallback).
           if (!company) company = String(companySelectEl?.value || "");
           if (!company && currentAccess?.companhia) {
             company = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
           }
           const type = String(formData.get("type") || "").trim();
-const priority = String(formData.get("priority") || "").trim();
+          const priority = String(formData.get("priority") || "").trim();
           const source = String(formData.get("source") || "").trim();
           const description = String(formData.get("description") || "").trim();
           const internal_notes = String(formData.get("internal_notes") || "").trim();
 
-          // Agora estes NÃO vêm do formulário — vêm do usuário logado
-          const origin_role = currentAccess.funcao;     // PA / SUB / COMANDO / COORDOP
-          const last_updated_by = currentAccess.nome;   // nome exibido
+          const origin_role = currentAccess.funcao;
+          const last_updated_by = currentAccess.nome;
 
           if (!officer_name || !company || !type || !priority || !source || !description) {
             alert("Preencha todos os campos obrigatórios.");
             return;
           }
 
-          // trava companhia se não for COORDOP
           if (currentAccess.funcao !== "COORDOP") {
             const must = (currentAccess.companhia === "CAVEIRAS") ? "Caveiras" : "Boinas Pretas";
             if (company !== must) {
@@ -1440,13 +1972,22 @@ const priority = String(formData.get("priority") || "").trim();
           await loadReports();
         });
 
-document.getElementById("filter-status").addEventListener("change", renderTables);
-        document.getElementById("filter-company").addEventListener("change", renderTables);
+        // Filtros
+        document.getElementById("filter-status").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
+        document.getElementById("filter-company").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
+        document.getElementById("filter-stage").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
+        document.getElementById("filter-priority").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
+        document.getElementById("filter-type").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
         document.getElementById("filter-search").addEventListener("input", renderTables);
+
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
           document.getElementById("filter-status").value = "todos";
           document.getElementById("filter-company").value = "todas";
+          document.getElementById("filter-stage").value = "todas";
+          document.getElementById("filter-priority").value = "todas";
+          document.getElementById("filter-type").value = "todos";
           document.getElementById("filter-search").value = "";
+          filterOlderThanDays = null;
           renderTables();
         });
 
