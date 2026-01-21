@@ -97,7 +97,8 @@
   <script>
     // MESMA CONFIG DO PAINEL
     const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+    // corrigido: removido "w0" extra no final da chave
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvt";
 
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -106,11 +107,14 @@
     const msg = document.getElementById("msg");
     const btn = document.getElementById("btn-login");
 
+    // URL do painel que já funciona no GitHub Pages
+    const PAINEL_URL = "https://gabrielsaleh1.github.io/Companhias";
+
     // Se já estiver logado, pula o login e vai direto pro painel
     document.addEventListener("DOMContentLoaded", async () => {
       const { data, error } = await sb.auth.getSession();
       if (data?.session?.user) {
-        window.location.href = "Painel Compania.html"; // mesmo nome do seu painel
+        window.location.href = PAINEL_URL;
       }
     });
 
@@ -135,7 +139,7 @@
 
       // Sucesso → a sessão é salva automaticamente (persistSession padrão = true)
       msg.textContent = "Login bem-sucedido, redirecionando...";
-      window.location.href = "Painel Compania.html";
+      window.location.href = PAINEL_URL;
     });
   </script>
 </body>
