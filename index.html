@@ -1016,41 +1016,66 @@
    async function requireAuthAndLoadAccess() {
   const { data, error } = await sb.auth.getUser();
 
-  if (error) {
-    console.error("Erro ao buscar usuário no Supabase:", error);
-  }
+  // 1) SE NÃO TIVER SESSÃO, NÃO MOSTRA OS DADOS
+  if (error || !data?.user) {
+    console.warn("Sem sessão Supabase, precisa logar.", error);
 
-  // 1) CASO NÃO TENHA SESSÃO → MODO MAJ COORDOP OFFLINE (NÃO REDIRECIONA)
-  if (!data?.user) {
-    const fallback = USER_ACCESS_MAP["7c8b8e53-1807-42e6-ae72-d855c285ad31"]; // Maj Coordop
-
-    currentAccess = fallback;
-
+    // Topbar: mostra que não está autenticado
     const badge = document.getElementById("user-badge");
     if (badge) {
-      const cia = (fallback.companhia === "TODAS") ? "Todas" : companyLabel(fallback.companhia);
-      badge.innerHTML = `<div><strong>${fallback.nome}</strong> (modo offline)</div><div style="opacity:.85;">Função: ${fallback.funcao} | Cia: ${cia}</div>`;
+      badge.innerHTML = `
+        <div><strong>Não autenticado</strong></div>
+        <div style="opacity:.85;">Use o login para acessar o painel interno.</div>
+      `;
     }
 
     const badgeReg = document.getElementById("badge-registrado-por");
     if (badgeReg) {
-      badgeReg.textContent = `Registrado por: ${fallback.nome}`;
+      badgeReg.textContent = "Registrado por: —";
     }
 
+    // Botão no topo vira "Ir para login"
     const btnLogout = document.getElementById("btn-logout");
     if (btnLogout) {
-      btnLogout.style.display = "none"; // não tem sessão pra sair
+      btnLogout.style.display = "";
+      btnLogout.textContent = "Ir para login";
+      btnLogout.onclick = () => {
+        window.location.href = "login.html";
+      };
     }
 
-    return true; // segue o fluxo normal do painel
+    // Mostra uma tela de aviso em vez do painel
+    const contentEl = document.querySelector("main.content");
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <section class="view active">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Acesso restrito</div>
+                <div class="card-subtitle">Faça login para visualizar as demandas internas.</div>
+              </div>
+            </div>
+            <p style="font-size:13px;line-height:1.5;margin-top:8px;">
+              Clique em <strong>"Ir para login"</strong> no canto superior direito, entre com seu e-mail e senha.
+              Depois do login você será redirecionado para este painel e verá apenas o que sua função permite
+              (PA / SUB / CMD / Maj Coordop).
+            </p>
+          </div>
+        </section>
+      `;
+    }
+
+    // IMPORTANTE: retorna false para o resto do código não continuar
+    return false;
   }
 
-  // 2) SE TIVER SESSÃO NORMAL → USA O MAPA DE ACESSO (PA / SUB / CMD / COORDOP)
+  // 2) SE TIVER SESSÃO, CARREGA PERFIL NORMAL (PA / SUB / CMD / COORDOP)
   const userId = data.user.id;
   let access = USER_ACCESS_MAP[userId];
 
   // Se o usuário existir no Supabase mas não estiver no mapa,
-  // cai num "perfil genérico" de Coordop somente pra não travar.
+  // cai num "perfil genérico" de Coordop (vê tudo) pra não travar.
   if (!access) {
     access = {
       nome: data.user.email || "Usuário",
@@ -1064,12 +1089,16 @@
   const badge = document.getElementById("user-badge");
   if (badge) {
     const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
-    badge.innerHTML = `<div><strong>${access.nome}</strong></div><div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>`;
+    badge.innerHTML = `
+      <div><strong>${access.nome}</strong></div>
+      <div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>
+    `;
   }
 
   const btnLogout = document.getElementById("btn-logout");
   if (btnLogout) {
     btnLogout.style.display = "";
+    btnLogout.textContent = "Sair";
     btnLogout.onclick = async () => {
       await sb.auth.signOut();
       window.location.href = "login.html";
