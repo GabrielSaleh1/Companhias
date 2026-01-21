@@ -1014,13 +1014,20 @@
     }
 
    async function requireAuthAndLoadAccess() {
-  const { data, error } = await sb.auth.getUser();
+  // Pega a sessão atual (jeito mais garantido no Supabase v2)
+  const { data, error } = await sb.auth.getSession();
 
-  // 1) SE NÃO TIVER SESSÃO, NÃO MOSTRA OS DADOS
-  if (error || !data?.user) {
-    console.warn("Sem sessão Supabase, precisa logar.", error);
+  if (error) {
+    console.error("Erro ao buscar sessão do Supabase:", error);
+  }
 
-    // Topbar: mostra que não está autenticado
+  const session = data?.session;
+  const user = session?.user;
+
+  // 1) SE NÃO TIVER SESSÃO, MOSTRA AVISO E NÃO CARREGA O RESTO
+  if (!user) {
+    console.warn("Nenhum usuário logado. É preciso fazer login.");
+
     const badge = document.getElementById("user-badge");
     if (badge) {
       badge.innerHTML = `
@@ -1034,7 +1041,6 @@
       badgeReg.textContent = "Registrado por: —";
     }
 
-    // Botão no topo vira "Ir para login"
     const btnLogout = document.getElementById("btn-logout");
     if (btnLogout) {
       btnLogout.style.display = "";
@@ -1044,7 +1050,6 @@
       };
     }
 
-    // Mostra uma tela de aviso em vez do painel
     const contentEl = document.querySelector("main.content");
     if (contentEl) {
       contentEl.innerHTML = `
@@ -1066,19 +1071,17 @@
       `;
     }
 
-    // IMPORTANTE: retorna false para o resto do código não continuar
-    return false;
+    return false; // impede o resto do script de rodar
   }
 
-  // 2) SE TIVER SESSÃO, CARREGA PERFIL NORMAL (PA / SUB / CMD / COORDOP)
-  const userId = data.user.id;
+  // 2) SE TIVER SESSÃO → APLICA AS REGRAS DO MAPA DE ACESSO
+  const userId = user.id;
   let access = USER_ACCESS_MAP[userId];
 
-  // Se o usuário existir no Supabase mas não estiver no mapa,
-  // cai num "perfil genérico" de Coordop (vê tudo) pra não travar.
+  // se o usuário não estiver no mapa, vira "Coordop genérico" pra não travar
   if (!access) {
     access = {
-      nome: data.user.email || "Usuário",
+      nome: user.email || "Usuário",
       funcao: "COORDOP",
       companhia: "TODAS"
     };
