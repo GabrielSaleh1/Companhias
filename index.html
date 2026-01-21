@@ -1013,45 +1013,76 @@
       return "Noite (18–23h)";
     }
 
-    async function requireAuthAndLoadAccess() {
-      const { data, error } = await sb.auth.getUser();
+   async function requireAuthAndLoadAccess() {
+  const { data, error } = await sb.auth.getUser();
 
-      if (error || !data?.user) {
-        window.location.href = "./login.html";
-        return false;
-      }
+  if (error) {
+    console.error("Erro ao buscar usuário no Supabase:", error);
+  }
 
-      const userId = data.user.id;
-      const access = USER_ACCESS_MAP[userId];
+  // 1) CASO NÃO TENHA SESSÃO → MODO MAJ COORDOP OFFLINE (NÃO REDIRECIONA)
+  if (!data?.user) {
+    const fallback = USER_ACCESS_MAP["7c8b8e53-1807-42e6-ae72-d855c285ad31"]; // Maj Coordop
 
-      if (!access) {
-        alert("Seu usuário logou, mas não possui permissão configurada no painel.");
-        return false;
-      }
+    currentAccess = fallback;
 
-      currentAccess = access;
-
-      const badge = document.getElementById("user-badge");
-      if (badge) {
-        const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
-        badge.innerHTML = `<div><strong>${access.nome}</strong></div><div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>`;
-      }
-
-      const btnLogout = document.getElementById("btn-logout");
-      if (btnLogout) {
-        btnLogout.addEventListener("click", async () => {
-          await sb.auth.signOut();
-          window.location.href = "login.html";
-        });
-      }
-
-      const badgeReg = document.getElementById("badge-registrado-por");
-      if (badgeReg) {
-        badgeReg.textContent = `Registrado por: ${access.nome}`;
-      }
-
-      return true;
+    const badge = document.getElementById("user-badge");
+    if (badge) {
+      const cia = (fallback.companhia === "TODAS") ? "Todas" : companyLabel(fallback.companhia);
+      badge.innerHTML = `<div><strong>${fallback.nome}</strong> (modo offline)</div><div style="opacity:.85;">Função: ${fallback.funcao} | Cia: ${cia}</div>`;
     }
+
+    const badgeReg = document.getElementById("badge-registrado-por");
+    if (badgeReg) {
+      badgeReg.textContent = `Registrado por: ${fallback.nome}`;
+    }
+
+    const btnLogout = document.getElementById("btn-logout");
+    if (btnLogout) {
+      btnLogout.style.display = "none"; // não tem sessão pra sair
+    }
+
+    return true; // segue o fluxo normal do painel
+  }
+
+  // 2) SE TIVER SESSÃO NORMAL → USA O MAPA DE ACESSO (PA / SUB / CMD / COORDOP)
+  const userId = data.user.id;
+  let access = USER_ACCESS_MAP[userId];
+
+  // Se o usuário existir no Supabase mas não estiver no mapa,
+  // cai num "perfil genérico" de Coordop somente pra não travar.
+  if (!access) {
+    access = {
+      nome: data.user.email || "Usuário",
+      funcao: "COORDOP",
+      companhia: "TODAS"
+    };
+  }
+
+  currentAccess = access;
+
+  const badge = document.getElementById("user-badge");
+  if (badge) {
+    const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
+    badge.innerHTML = `<div><strong>${access.nome}</strong></div><div style="opacity:.85;">Função: ${access.funcao} | Cia: ${cia}</div>`;
+  }
+
+  const btnLogout = document.getElementById("btn-logout");
+  if (btnLogout) {
+    btnLogout.style.display = "";
+    btnLogout.onclick = async () => {
+      await sb.auth.signOut();
+      window.location.href = "login.html";
+    };
+  }
+
+  const badgeReg = document.getElementById("badge-registrado-por");
+  if (badgeReg) {
+    badgeReg.textContent = `Registrado por: ${access.nome}`;
+  }
+
+  return true;
+}
 
     function canSeeCompany(normCompany) {
       if (!currentAccess) return false;
