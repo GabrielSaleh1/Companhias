@@ -400,6 +400,12 @@
           <button class="nav-btn" data-view="view-relatorios" id="nav-relatorios"><span class="label">Relatórios</span></button>
         </div>
       </div>
+      <div>
+  <div class="sidebar-section-title">Coordop</div>
+  <div class="nav-group">
+    <button class="nav-btn" data-view="view-solicitacoes"><span class="label">Solicitações ao Coordop</span></button>
+  </div>
+</div>
 
       <div>
         <div class="sidebar-section-title">Companhias</div>
@@ -1928,15 +1934,15 @@
             document.getElementById(target).classList.add("active");
 
             const labels = {
-              "view-dashboard": "Visão Geral",
-              "view-registros": "Registros",
-              "view-relatorios": "Relatórios",
-              "view-cia-alfa": "Companhia Caveiras",
-              "view-cia-bravo": "Companhia Boinas Pretas",
-              "view-pa": "Praça Auxiliar",
-              "view-sub": "Subcomando",
-              "view-cmd": "Comandante"
-            };
+  "view-dashboard": "Visão Geral",
+  "view-registros": "Registros",
+  "view-cia-alfa": "Companhia Caveiras",
+  "view-cia-bravo": "Companhia Boinas Pretas",
+  "view-pa": "Praça Auxiliar",
+  "view-sub": "Subcomando",
+  "view-cmd": "Comandante",
+  "view-solicitacoes": "Solicitações ao Coordop"
+};
             topbarTitle.textContent = labels[target] || "Painel";
           });
         });
