@@ -562,86 +562,7 @@
               <button class="btn sm" onclick="quickFilter({stage:'CMD'})">Etapa CMD</button>
             </span>
           </div>
-          <section id="view-solicitacoes" class="view">
-  <div class="section-title">
-    <span>Solicitações ao Major Coordop</span>
-  </div>
-
-  <div class="flex-row" style="gap:16px; align-items:flex-start; flex-wrap:wrap;">
-
-    <!-- FORMULÁRIO: COMANDO CRIA SOLICITAÇÃO -->
-    <div class="card" style="flex:1; min-width:320px;">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Nova solicitação</div>
-          <div class="card-subtitle">Uso exclusivo dos Comandos de Companhia</div>
-        </div>
-      </div>
-
-      <form id="form-solicitacao-coordop">
-        <div class="field-group">
-          <div class="field-label">Título da solicitação</div>
-          <input class="input" name="title" required placeholder="Ex.: Pedido de reforço de efetivo" />
-        </div>
-
-        <div class="flex-row" style="gap:12px;">
-          <div class="field-group" style="flex:1;">
-            <div class="field-label">Companhia</div>
-            <input class="input" name="company" id="solicitacao-company" readonly />
-          </div>
-          <div class="field-group" style="min-width:180px;">
-            <div class="field-label">Prioridade</div>
-            <select class="select" name="priority" required>
-              <option>Baixa</option>
-              <option>Média</option>
-              <option>Alta</option>
-              <option>Crítica</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <div class="field-label">Descrição detalhada</div>
-          <textarea class="textarea" name="description" rows="4" required placeholder="Explique de forma clara o que está sendo solicitado ao Coordop."></textarea>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-          <button type="submit" class="btn" id="btn-enviar-solicitacao">Enviar para o Coordop</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- LISTA: VISÃO GERAL DAS SOLICITAÇÕES -->
-    <div class="card" style="flex:2; min-width:360px;">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Solicitações registradas</div>
-          <div class="card-subtitle">Filtradas por companhia ou todas (para Coordop)</div>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Companhia</th>
-              <th>Título</th>
-              <th>Prioridade</th>
-              <th>Status</th>
-              <th>Criado por</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-solicitacoes-coordop">
-            <tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</section>
+          
 
           <div class="flex-row">
             <!-- AQUI FOI O BUG: agora está 'card flex-1' -->
@@ -820,7 +741,88 @@
           </div>
         </section>
 
-        <section id="view-relatorios" class="view">
+        <section id="view-solicitacoes" class="view">
+  <div class="section-title">
+    <span>Solicitações ao Major Coordop</span>
+  </div>
+
+  <div class="flex-row" style="gap:16px; align-items:flex-start; flex-wrap:wrap;">
+
+    <!-- FORMULÁRIO: COMANDO CRIA SOLICITAÇÃO -->
+    <div class="card" style="flex:1; min-width:320px;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Nova solicitação</div>
+          <div class="card-subtitle">Uso exclusivo dos Comandos de Companhia</div>
+        </div>
+      </div>
+
+      <form id="form-solicitacao-coordop">
+        <div class="field-group">
+          <div class="field-label">Título da solicitação</div>
+          <input class="input" name="title" required placeholder="Ex.: Pedido de reforço de efetivo" />
+        </div>
+
+        <div class="flex-row" style="gap:12px;">
+          <div class="field-group" style="flex:1;">
+            <div class="field-label">Companhia</div>
+            <input class="input" name="company" id="solicitacao-company" readonly />
+          </div>
+          <div class="field-group" style="min-width:180px;">
+            <div class="field-label">Prioridade</div>
+            <select class="select" name="priority" required>
+              <option>Baixa</option>
+              <option>Média</option>
+              <option>Alta</option>
+              <option>Crítica</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Descrição detalhada</div>
+          <textarea class="textarea" name="description" rows="4" required placeholder="Explique de forma clara o que está sendo solicitado ao Coordop."></textarea>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button type="submit" class="btn" id="btn-enviar-solicitacao">Enviar para o Coordop</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LISTA: VISÃO GERAL DAS SOLICITAÇÕES -->
+    <div class="card" style="flex:2; min-width:360px;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Solicitações registradas</div>
+          <div class="card-subtitle">Filtradas por companhia ou todas (para Coordop)</div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Companhia</th>
+              <th>Título</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Criado por</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-solicitacoes-coordop">
+            <tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="view-relatorios" class="view">
           <div class="section-title">
             <span>Relatórios (Maj Coordop)</span>
             <span class="badge gray">Comparativos & indicadores</span>
@@ -1011,7 +1013,7 @@
   <script>
     // --------- SUPABASE CONFIG ---------
     const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvt";
 
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
