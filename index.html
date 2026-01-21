@@ -433,7 +433,7 @@
 
         <div class="topbar-right">
           <div id="user-badge" style="line-height:1.2;">Carregando perfil...</div>
-          <button class="btn sm" id="btn-logout" style="margin-top:8px;">Sair</button>
+          <button class="btn.sm" id="btn-logout" style="margin-top:8px;">Sair</button>
           <br />
           <span class="tag-pill"><strong>Modo</strong> Gestão interna</span>
           <div id="alert-badge" style="margin-top:6px;font-size:11px;"></div>
@@ -478,7 +478,7 @@
                   <div class="card-title">Resolvidas</div>
                   <div class="card-subtitle">Encerradas (decisão aplicada)</div>
                 </div>
-                <span class="badge.green">OK</span>
+                <span class="badge green">OK</span>
               </div>
               <div class="stat-number" id="stat-resolvido">0</div>
               <div class="stat-label">Inclui ações internas e decisões.</div>
@@ -528,7 +528,7 @@
                   <div class="card-title">Reincidência de policiais</div>
                   <div class="card-subtitle">Top policiais sob observação</div>
                 </div>
-                <span class="badge.red">Reincidência</span>
+                <span class="badge red">Reincidência</span>
               </div>
               <div id="dash-reincidencia" style="font-size:12px;line-height:1.55;"></div>
             </div>
@@ -539,7 +539,7 @@
                   <div class="card-title">Elogios & destaques</div>
                   <div class="card-subtitle">Reconhecimento positivo</div>
                 </div>
-                <span class="badge.green">Moral da tropa</span>
+                <span class="badge green">Moral da tropa</span>
               </div>
               <div id="dash-elogios" style="font-size:12px;line-height:1.55;"></div>
             </div>
@@ -558,7 +558,8 @@
           </div>
 
           <div class="flex-row">
-            <div class="card.flex-1">
+            <!-- AQUI FOI O BUG: agora está 'card flex-1' -->
+            <div class="card flex-1">
               <div class="card-header">
                 <div>
                   <div class="card-title">Nova demanda</div>
@@ -924,7 +925,7 @@
   <script>
     // --------- SUPABASE CONFIG ---------
     const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvtw0";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvt";
 
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -948,11 +949,10 @@
     };
 
     let allReports = [];
-    let currentAccess = null; // { nome, funcao, companhia }
+    let currentAccess = null;
     let currentModalReportId = null;
     let filterOlderThanDays = null;
 
-    // ====== HELPERS VISUAIS ======
     function showToast(message){
       const toast = document.getElementById("toast");
       if(!toast) return;
@@ -964,7 +964,6 @@
       }, 3500);
     }
 
-    // ====== COMPANHIA (compatível com registros antigos Alfa/Bravo) ======
     function normalizeCompany(raw) {
       const v = String(raw || "").trim().toUpperCase();
       if (v === "ALFA" || v === "CAVEIRAS") return "CAVEIRAS";
@@ -1014,7 +1013,6 @@
       return "Noite (18–23h)";
     }
 
-    // ====== AUTH + PERFIL ======
     async function requireAuthAndLoadAccess() {
       const { data, error } = await sb.auth.getUser();
 
@@ -1055,7 +1053,6 @@
       return true;
     }
 
-    // ====== VISUALIZAÇÃO POR COMPANHIA ======
     function canSeeCompany(normCompany) {
       if (!currentAccess) return false;
       if (currentAccess.funcao === "COORDOP") return true;
@@ -1067,20 +1064,16 @@
       return canSeeCompany(rc);
     }
 
-    // ====== REGRAS DE AÇÃO ======
     function canAction(action, r) {
       if (!currentAccess) return false;
 
       const role = currentAccess.funcao;
       const rc = normalizeCompany(r.company);
 
-      // Se não for Coordop: trava por companhia
       if (role !== "COORDOP" && currentAccess.companhia !== rc) return false;
-
-      // Coordop pode tudo
       if (role === "COORDOP") return true;
 
-      if (action === "escalarPA") return false; // só coordop
+      if (action === "escalarPA") return false;
       if (action === "marcarEmAnalise") return role === "PA" && r.current_stage === "PA";
       if (action === "escalarParaSub") return role === "PA" && r.current_stage === "PA";
       if (action === "escalarParaCmd") return role === "SUB" && r.current_stage === "SUB";
@@ -1196,7 +1189,6 @@
         return true;
       });
 
-      // Registros (geral)
       filtered.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -1214,7 +1206,6 @@
         tbodyReg.appendChild(tr);
       });
 
-      // Caveiras
       visible.filter(r => normalizeCompany(r.company) === "CAVEIRAS").forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -1230,7 +1221,6 @@
         tbodyCaveiras.appendChild(tr);
       });
 
-      // Boinas Pretas
       visible.filter(r => normalizeCompany(r.company) === "BOINAS_PRETAS").forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -1246,7 +1236,6 @@
         tbodyBoinas.appendChild(tr);
       });
 
-      // PA
       visible
         .filter(r => r.current_stage === "PA" && r.status !== "Arquivado")
         .forEach(r => {
@@ -1268,7 +1257,6 @@
           tbodyPA.appendChild(tr);
         });
 
-      // SUB
       visible
         .filter(r => r.current_stage === "SUB" && r.status !== "Arquivado")
         .forEach(r => {
@@ -1290,7 +1278,6 @@
           tbodySub.appendChild(tr);
         });
 
-      // CMD
       visible
         .filter(r => r.current_stage === "CMD" && r.status !== "Arquivado")
         .forEach(r => {
@@ -1313,7 +1300,7 @@
         });
 
       updateDashboardStats(visible);
-      computeMetrics(); // atualiza dashboards/relatórios
+      computeMetrics();
     }
 
     async function loadReports() {
@@ -1353,7 +1340,6 @@
       return true;
     }
 
-    // ====== AÇÕES (com guarda de permissão) ======
     async function marcarEmAnalise(id) {
       const r = allReports.find(x => x.id === id);
       if (!r || !canAction("marcarEmAnalise", r)) return alert("Sem permissão.");
@@ -1430,7 +1416,6 @@
       showToast("Demanda escalada para o Praça Auxiliar.");
     }
 
-    // ====== MODAL / FICHA DO POLICIAL / DECISÃO ======
     function openModal(r){
       currentModalReportId = r.id;
 
@@ -1438,7 +1423,6 @@
       document.getElementById("modal-sub").textContent =
         `${companyLabel(normalizeCompany(r.company))} • ${r.type} • ${r.priority}`;
 
-      // Perfil do policial
       const sameOfficer = allReports.filter(x => x.officer_name === r.officer_name);
       const total = sameOfficer.length;
       const pend = sameOfficer.filter(x => x.status === "Pendente").length;
@@ -1473,7 +1457,6 @@
         ${r.last_updated_by ? `<div>✍️ Última ação por: ${r.last_updated_by}</div>` : ``}
       `;
 
-      // Integração lógica com RSO / Ponto
       if (r.source && String(r.source).includes("RSO")) {
         timelineHtml += `<div>📄 Origem: relato em patrulha (RSO). Verifique o RSO desse dia para mais detalhes.</div>`;
       }
@@ -1492,11 +1475,8 @@
       }
 
       document.getElementById("modal-timeline").innerHTML = timelineHtml;
-
-      // Notas internas
       document.getElementById("modal-notes").value = r.internal_notes || "";
 
-      // Ações / decisão do comando
       let actionsHtml = "";
       if (currentAccess) {
         if (canAction("resolver", r) || canAction("arquivar", r)) {
@@ -1587,7 +1567,6 @@
     window.saveInternalNotes = saveInternalNotes;
     window.salvarDecisao = salvarDecisao;
 
-    // ====== QUICK FILTER ======
     function quickFilter(criteria){
       if (criteria.status){
         const el = document.getElementById("filter-status");
@@ -1610,12 +1589,10 @@
     }
     window.quickFilter = quickFilter;
 
-    // ====== MÉTRICAS AVANÇADAS (reincidência, horários, SLA por etapa, clima, etc.) ======
     function computeMetrics(){
       const visible = allReports.filter(filterByAccess);
       const now = new Date();
 
-      // --- SLA Geral + por etapa ---
       let totalAbertos = 0;
       let somaDias = 0;
 
@@ -1658,7 +1635,6 @@
         `;
       }
 
-      // --- Tipos (dash-types + rel-types) ---
       const tiposCount = {};
       const tiposPorCia = {
         CAVEIRAS:{},
@@ -1700,7 +1676,6 @@
         relTypes.innerHTML = html || "Sem dados para as companhias visíveis.";
       }
 
-      // --- Aging / pendências antigas (dash-aging + rel-old) ---
       const pendentes = visible.filter(r => r.status !== "Resolvido" && r.status !== "Arquivado");
       const ordenadoAntigo = [...pendentes].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
 
@@ -1722,7 +1697,6 @@
         relOld.innerHTML = top10.length ? top10.join("<br/>") : "Sem pendências antigas no momento.";
       }
 
-      // --- Reincidência de policiais ---
       const porPolicial = {};
       visible.forEach(r => {
         if (!porPolicial[r.officer_name]) {
@@ -1751,7 +1725,6 @@
         }
       }
 
-      // --- Elogios & Destaques ---
       const elogiosTodos = visible.filter(r => r.type === "Elogio / Destaque");
       const elogiosPorPolicial = {};
       elogiosTodos.forEach(r => {
@@ -1780,7 +1753,6 @@
         dashElogios.innerHTML = html;
       }
 
-      // --- Comparativo por companhia + eficiência ---
       const relCompare = document.getElementById("rel-compare");
       if (relCompare){
         let html = "";
@@ -1793,7 +1765,6 @@
           const arq = daCia.filter(r => r.status === "Arquivado").length;
           const criticas = daCia.filter(r => r.priority === "Crítica").length;
 
-          // Eficiência simples: % resolvido/total
           const eficiencia = total ? (res / total) * 10 : 0;
 
           html += `<strong>${companyLabel(cia)}</strong><br/>`;
@@ -1804,7 +1775,6 @@
         relCompare.innerHTML = html || "Sem dados para comparação.";
       }
 
-      // --- Horários críticos ---
       const relHorarios = document.getElementById("rel-horarios");
       if (relHorarios){
         const mapa = {};
@@ -1820,7 +1790,6 @@
         }
       }
 
-      // --- Clima por companhia ---
       const relClima = document.getElementById("rel-clima");
       if (relClima){
         let html = "";
@@ -1853,7 +1822,6 @@
         relClima.innerHTML = html;
       }
 
-      // --- Alertas no topo (badge) ---
       const alertBadge = document.getElementById("alert-badge");
       if (alertBadge){
         const critPend = visible.filter(r => r.priority === "Crítica" && (r.status === "Pendente" || r.status === "Em análise"));
@@ -1972,7 +1940,6 @@
           await loadReports();
         });
 
-        // Filtros
         document.getElementById("filter-status").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
         document.getElementById("filter-company").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
         document.getElementById("filter-stage").addEventListener("change", () => { filterOlderThanDays = null; renderTables(); });
