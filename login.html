@@ -73,6 +73,7 @@
       font-size:12px;
       margin-top:8px;
       min-height:16px;
+      color:#f87171;
     }
   </style>
 </head>
@@ -95,9 +96,8 @@
   </div>
 
   <script>
-    // MESMA CONFIG DO PAINEL
+    // CONFIG DO SUPABASE - JÁ AJUSTADA
     const SUPABASE_URL = "https://ilonwkgtdszmpcjwlezc.supabase.co";
-    // corrigido: removido "w0" extra no final da chave
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsb253a2d0ZHN6bXBjandsZXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NzQxMDIsImV4cCI6MjA3NTU1MDEwMn0.Cc-BtnHlXaGVCY6T6iXe0QA1tsfc17aX8lswEICvt";
 
     const { createClient } = supabase;
@@ -107,17 +107,18 @@
     const msg = document.getElementById("msg");
     const btn = document.getElementById("btn-login");
 
-    // URL do painel que já funciona no GitHub Pages
+    // URL FINAL DO PAINEL
     const PAINEL_URL = "https://gabrielsaleh1.github.io/Companhias/";
 
-    // Se já estiver logado, pula o login e vai direto pro painel
+    // REDIRECIONA SE JÁ ESTIVER LOGADO
     document.addEventListener("DOMContentLoaded", async () => {
-      const { data, error } = await sb.auth.getSession();
+      const { data } = await sb.auth.getSession();
       if (data?.session?.user) {
         window.location.href = PAINEL_URL;
       }
     });
 
+    // LOGIN
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       msg.textContent = "";
@@ -127,18 +128,21 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await sb.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (error) {
-        console.error(error);
-        msg.textContent = "Falha no login: verifique e-mail e senha.";
+        console.error("Erro no login Supabase:", error);
+        msg.textContent = error.message || "Erro ao fazer login.";
         btn.disabled = false;
         btn.textContent = "Entrar";
         return;
       }
 
-      // Sucesso → a sessão é salva automaticamente (persistSession padrão = true)
-      msg.textContent = "Login bem-sucedido, redirecionando...";
+      msg.style.color = "#4ade80";
+      msg.textContent = "Login bem-sucedido! Redirecionando...";
       window.location.href = PAINEL_URL;
     });
   </script>
