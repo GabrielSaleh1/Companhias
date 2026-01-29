@@ -1562,13 +1562,15 @@ async function updateCoordopRequest(id, fields) {
       if (!r || !canAction("resolver", r)) return alert("Sem permissão.");
       const fields = { status: "Resolvido" };
       if (decisionPayload) {
-        fields.decision_type = decisionPayload.decision_type || null;
-        fields.decision_details = decisionPayload.decision_details || null;
-        fields.decision_by = decisionPayload.decision_by || null;
-        fields.decision_at = decisionPayload.decision_at || null;
-        fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
-      } else {
-        fields.last_updated_by = currentAccess?.nome || null;
+    fields.decision_type = decisionPayload.decision_type || null;
+    fields.decision_details = decisionPayload.decision_details || null;
+
+    // 🔥 Nomes CORRETOS da tabela:
+    fields.decided_by = decisionPayload.decided_by || currentAccess?.nome || null;
+    fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
+
+    fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
+}
       }
       if (!(await updateReport(id, fields))) return;
       await loadReports();
