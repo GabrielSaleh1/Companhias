@@ -1584,8 +1584,8 @@ fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
       if (decisionPayload) {
         fields.decision_type = decisionPayload.decision_type || null;
         fields.decision_details = decisionPayload.decision_details || null;
-        fields.decision_by = decisionPayload.decision_by || null;
-        fields.decision_at = decisionPayload.decision_at || null;
+        fields.decided_by = decisionPayload.decided_by || currentAccess?.nome || null;
+fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
         fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
       } else {
         fields.last_updated_by = currentAccess?.nome || null;
