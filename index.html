@@ -1567,8 +1567,9 @@ async function updateCoordopRequest(id, fields) {
     fields.decision_by = decisionPayload.decision_by || null;
     fields.decision_at = decisionPayload.decision_at || null;
     fields.last_updated_by = decisionPayload.last_updated_by || currentAccess?.nome || null;
-}
-      }
+} else {
+    fields.last_update_by = currentAcess?.nome || null;
+  }
       if (!(await updateReport(id, fields))) return;
       await loadReports();
       showToast("Demanda marcada como 'Resolvida'.");
