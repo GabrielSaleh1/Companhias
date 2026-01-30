@@ -2295,6 +2295,46 @@ await loadCoordopRequests();
         await loadReports();
       })();
     });
+    // === FORMULÁRIO DE SOLICITAÇÃO AO COORDOP ===
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("form-solicitacao-coordop");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!currentAccess) {
+      alert("Erro: usuário não identificado.");
+      return;
+    }
+
+    // Somente Comando ou Coordop podem enviar
+    if (currentAccess.funcao !== "COMANDO" && currentAccess.funcao !== "COORDOP") {
+      alert("Apenas Comando pode enviar solicitações.");
+      return;
+    }
+
+    const formData = new FormData(form);
+
+    const payload = {
+      title: formData.get("title"),
+      company: currentAccess.companhia, // <-- aqui ele registra a companhia real
+      priority: formData.get("priority"),
+      description: formData.get("description"),
+      created_by: currentAccess.nome,
+      status: "Pendente",
+      created_at: new Date().toISOString()
+    };
+
+    const ok = await createCoordopRequest(payload);
+
+    if (ok) {
+      showToast("Solicitação enviada ao Coordop!");
+      form.reset();
+      loadCoordopRequests();
+    }
+  });
+});
   </script>
 </body>
 </html>
