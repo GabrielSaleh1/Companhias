@@ -2317,14 +2317,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(form);
 
     const payload = {
-      title: formData.get("title"),
-      company: currentAccess.companhia, // <-- aqui ele registra a companhia real
-      priority: formData.get("priority"),
-      description: formData.get("description"),
-      created_by: currentAccess.nome,
-      status: "Pendente",
-      created_at: new Date().toISOString()
-    };
+  title: formData.get("title"),
+  company: currentAccess.companhia,
+  priority: formData.get("priority"),
+  description: formData.get("description"),
+  created_by: currentAccess.nome,            // Nome do usuário
+  created_by_role: currentAccess.funcao,     // Função do usuário (PA/SUB/COMANDO/COORDOP)
+  status: "Pendente",
+  created_at: new Date().toISOString()
+};
 
     const ok = await createCoordopRequest(payload);
 
