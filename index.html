@@ -1229,7 +1229,7 @@
       if (action === "marcarEmAnalise") return role === "PA" && r.current_stage === "PA";
       if (action === "escalarParaSub") return role === "PA" && r.current_stage === "PA";
       if (action === "escalarParaCmd") return role === "SUB" && r.current_stage === "SUB";
-      if (action === "resolver") return (role === "SUB" && r.current_stage === "SUB") || (role === "COMANDO" && r.current_stage === "CMD");
+      if (action === "resolver") return (role === "PA" && r.current_stage === "PA") || (role === "SUB" && r.current_stage === "SUB") || (role === "COMANDO" && r.current_stage === "CMD");
       if (action === "arquivar") return role === "COMANDO" && r.current_stage === "CMD";
       return false;
     }
