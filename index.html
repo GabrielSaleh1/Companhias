@@ -1609,7 +1609,7 @@ fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
       showToast("Demanda escalada para o Praça Auxiliar.");
     }
 
-   function renderCoordopRequests() {
+    function renderCoordopRequests() {
   const tbody = document.getElementById("tbody-solicitacoes-coordop");
   if (!tbody) return;
 
@@ -1632,13 +1632,34 @@ fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
   }
 
   visible.forEach(r => {
-    ...
-  });
+    const tr = document.createElement("tr");
 
-  tbody.querySelectorAll("button[data-acao]").forEach(btn => {
-    ...
+    const dt = new Date(r.created_at);
+    const dataFmt = dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+    const isCoordop = role === "COORDOP";
+
+    let actions = "";
+    if (isCoordop) {
+      actions += `<button class="btn xs" data-acao="analise" data-id="${r.id}">Em análise</button> `;
+      actions += `<button class="btn xs" data-acao="deferir" data-id="${r.id}">Deferir</button> `;
+      actions += `<button class="btn xs gray" data-acao="indeferir" data-id="${r.id}">Indeferir</button>`;
+    } else {
+      actions = `<span style="color:#9ca3af;font-size:11px;">Sem ações</span>`;
+    }
+
+    tr.innerHTML = `
+      <td>${dataFmt}</td>
+      <td>${r.company}</td>
+      <td>${r.title}</td>
+      <td>${r.priority}</td>
+      <td>${r.status}</td>
+      <td>${r.created_by}</td>
+      <td>${actions}</td>
+    `;
+
+    tbody.appendChild(tr);
   });
-}
 
   // Listener para botões de ação do Coordop
   tbody.querySelectorAll("button[data-acao]").forEach(btn => {
