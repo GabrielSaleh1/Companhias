@@ -2169,53 +2169,6 @@ if (formSolic) {
     // Bloqueia o uso do formulário pra quem não for Comando
     formSolic.querySelectorAll("input, textarea, select, button").forEach(el => el.disabled = true);
   }
-
-   formSolic.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    if (!currentAccess) {
-      alert("Perfil não carregado. Recarregue a página.");
-      return;
-    }
-
-    if (currentAccess.funcao !== "COMANDO" && currentAccess.funcao !== "COORDOP") {
-      alert("Somente Comandos de Companhia podem enviar solicitações ao Coordop.");
-      return;
-    }
-
-    const fd = new FormData(formSolic);
-    const title = String(fd.get("title") || "").trim();
-    const description = String(fd.get("description") || "").trim();
-    const priority = String(fd.get("priority") || "").trim();
-    const company = String(fd.get("company") || "").trim() || "Não informado";
-
-    if (!title || !description || !priority) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    const payload = {
-      title,
-      description,
-      priority,
-      company,
-      status: "Aberta",
-      created_by: currentAccess.nome,
-      created_by_role: currentAccess.funcao
-    };
-
-    if (!(await createCoordopRequest(payload))) return;
-
-    formSolic.reset();
-    if (inputCiaSolic && currentAccess?.companhia) {
-      inputCiaSolic.value = currentAccess.companhia === "CAVEIRAS"
-        ? "Companhia Caveiras"
-        : currentAccess.companhia === "BOINAS_PRETAS"
-        ? "Companhia Boinas Pretas"
-        : currentAccess.companhia;
-    }
-    await loadCoordopRequests();
-  });
 }
 
 // Carrega as solicitações assim que logar
