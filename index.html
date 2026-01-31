@@ -1609,57 +1609,50 @@ fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
       showToast("Demanda escalada para o Praça Auxiliar.");
     }
 
-    function renderCoordopRequests() {
+   function renderCoordopRequests() {
   const tbody = document.getElementById("tbody-solicitacoes-coordop");
   if (!tbody) return;
 
   tbody.innerHTML = "";
 
-  if (!coordopRequests.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>`;
-    return;
+  // Se for o COORDOP → vê tudo
+  let visible = [];
+  if (currentAccess.funcao === "COORDOP") {
+    visible = coordopRequests;
+  } 
+  // Se for COMANDO → vê apenas solicitações criadas por COMANDO
+  else if (currentAccess.funcao === "COMANDO") {
+    visible = coordopRequests.filter(r => r.created_by_role === "COMANDO");
+  }
+  // PA e SUB não veem nada
+  else {
+    visible = [];
   }
 
-  const role = currentAccess?.funcao;
-  const ciaUser = currentAccess?.companhia;
-
-  let visible = coordopRequests.slice();
-
-  // Se não for Coordop, filtra pela companhia do usuário
-  if (role !== "COORDOP" && ciaUser) {
-    const ciaNorm = ciaUser.toUpperCase();
-    visible = visible.filter(r => (r.company || "").toUpperCase().includes(ciaNorm));
+  if (!visible.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">
+          Nenhuma solicitação encontrada.
+        </td>
+      </tr>`;
+    return;
   }
 
   visible.forEach(r => {
     const tr = document.createElement("tr");
-
-    const dt = new Date(r.created_at);
-    const dataFmt = dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-
-    const isCoordop = role === "COORDOP";
-
-    let actions = "";
-    if (isCoordop) {
-      actions += `<button class="btn xs" data-acao="analise" data-id="${r.id}">Em análise</button> `;
-      actions += `<button class="btn xs" data-acao="deferir" data-id="${r.id}">Deferir</button> `;
-      actions += `<button class="btn xs gray" data-acao="indeferir" data-id="${r.id}">Indeferir</button>`;
-    } else {
-      actions = `<span style="color:#9ca3af;font-size:11px;">Sem ações</span>`;
-    }
-
     tr.innerHTML = `
-      <td>${dataFmt}</td>
+      <td>${formatDate(r.created_at)}</td>
       <td>${r.company}</td>
       <td>${r.title}</td>
       <td>${r.priority}</td>
       <td>${r.status}</td>
       <td>${r.created_by}</td>
-      <td>${actions}</td>
+      <td>-</td>
     `;
-
     tbody.appendChild(tr);
   });
+}
 
   // Listener para botões de ação do Coordop
   tbody.querySelectorAll("button[data-acao]").forEach(btn => {
