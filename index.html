@@ -2248,7 +2248,7 @@ await loadCoordopRequests();
         await loadReports();
       })();
     });
-    // === FORMULÁRIO DE SOLICITAÇÃO AO COORDOP ===
+   // === FORMULÁRIO DE SOLICITAÇÃO AO COORDOP ===
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form-solicitacao-coordop");
   if (!form) return;
@@ -2261,7 +2261,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Somente Comando ou Coordop podem enviar
+    // Só COMANDO ou COORDOP
     if (currentAccess.funcao !== "COMANDO" && currentAccess.funcao !== "COORDOP") {
       alert("Apenas Comando pode enviar solicitações.");
       return;
@@ -2269,23 +2269,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formData = new FormData(form);
 
+    const title       = String(formData.get("title")       || "").trim();
+    const description = String(formData.get("description") || "").trim();
+    const priority    = String(formData.get("priority")    || "").trim();
+
+    // companhia vem do perfil (CAVEIRAS / BOINAS_PRETAS) e é só pra registro
+    const company = currentAccess.companhia || "NÃO INFORMADO";
+
+    if (!title || !description || !priority) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
     const payload = {
-  title: formData.get("title"),
-  company: currentAccess.companhia,
-  priority: formData.get("priority"),
-  description: formData.get("description"),
-  created_by: currentAccess.nome,            // Nome do usuário
-  created_by_role: currentAccess.funcao,     // Função do usuário (PA/SUB/COMANDO/COORDOP)
-  status: "Pendente",
-  created_at: new Date().toISOString()
-};
+      title,
+      description,
+      priority,
+      company,
+      status: "Pendente",
+      created_by: currentAccess.nome || "Desconhecido",
+      created_by_role: currentAccess.funcao || "COMANDO",
+      created_at: new Date().toISOString()
+    };
 
     const ok = await createCoordopRequest(payload);
 
     if (ok) {
       showToast("Solicitação enviada ao Coordop!");
       form.reset();
-      loadCoordopRequests();
+
+      // repõe a companhia no input travado
+      const inputCiaSolic = document.getElementById("solicitacao-company");
+      if (inputCiaSolic && currentAccess?.companhia) {
+        inputCiaSolic.value =
+          currentAccess.companhia === "CAVEIRAS"
+            ? "Companhia Caveiras"
+            : currentAccess.companhia === "BOINAS_PRETAS"
+            ? "Companhia Boinas Pretas"
+            : currentAccess.companhia;
+      }
+
+      await loadCoordopRequests();
     }
   });
 });
