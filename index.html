@@ -1615,42 +1615,28 @@ fields.decided_at = decisionPayload.decided_at || new Date().toISOString();
 
   tbody.innerHTML = "";
 
-  // Se for o COORDOP → vê tudo
-  let visible = [];
-  if (currentAccess.funcao === "COORDOP") {
-    visible = coordopRequests;
-  } 
-  // Se for COMANDO → vê apenas solicitações criadas por COMANDO
-  else if (currentAccess.funcao === "COMANDO") {
-    visible = coordopRequests.filter(r => r.created_by_role === "COMANDO");
-  }
-  // PA e SUB não veem nada
-  else {
-    visible = [];
-  }
-
-  if (!visible.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">
-          Nenhuma solicitação encontrada.
-        </td>
-      </tr>`;
+  if (!coordopRequests.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;font-size:12px;color:#9ca3af;">Nenhuma solicitação encontrada.</td></tr>`;
     return;
   }
 
+  const role = currentAccess?.funcao;
+  const ciaUser = currentAccess?.companhia;
+
+  let visible = coordopRequests.slice();
+
+  // Se não for Coordop, filtra pela companhia do usuário
+  if (role !== "COORDOP" && ciaUser) {
+    const ciaNorm = ciaUser.toUpperCase();
+    visible = visible.filter(r => (r.company || "").toUpperCase().includes(ciaNorm));
+  }
+
   visible.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${formatDate(r.created_at)}</td>
-      <td>${r.company}</td>
-      <td>${r.title}</td>
-      <td>${r.priority}</td>
-      <td>${r.status}</td>
-      <td>${r.created_by}</td>
-      <td>-</td>
-    `;
-    tbody.appendChild(tr);
+    ...
+  });
+
+  tbody.querySelectorAll("button[data-acao]").forEach(btn => {
+    ...
   });
 }
 
