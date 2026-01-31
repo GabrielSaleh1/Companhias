@@ -1177,7 +1177,8 @@
   }
 
   currentAccess = access;
-
+await loadCoordopRequests();
+     
   const badge = document.getElementById("user-badge");
   if (badge) {
     const cia = (access.companhia === "TODAS") ? "Todas" : companyLabel(access.companhia);
